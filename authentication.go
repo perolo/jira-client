@@ -89,10 +89,11 @@ func (s *AuthenticationService) AcquireSessionCookie(username, password string) 
 	return true, nil
 }
 
+// SetBasicAuth sets username and password for the basic auth against the JIRA instance.
 func (s *AuthenticationService) SetBasicAuth(username, password string) {
-	s.username = username;
-	s.password = password;
-	s.authType = authTypeBasic;
+	s.username = username
+	s.password = password
+	s.authType = authTypeBasic
 }
 
 // Authenticated reports if the current Client has authentication details for JIRA
@@ -130,7 +131,7 @@ func (s *AuthenticationService) Logout() error {
 		return fmt.Errorf("The logout was unsuccessful with status %d", resp.StatusCode)
 	}
 
-	// If logout successfull, delete session
+	// If logout successful, delete session
 	s.client.session = nil
 
 	return nil
@@ -172,7 +173,7 @@ func (s *AuthenticationService) GetCurrentUser() (*Session, error) {
 	err = json.Unmarshal(data, &ret)
 
 	if err != nil {
-		return nil, fmt.Errorf("Could not unmarshall recieved user info : %s", err)
+		return nil, fmt.Errorf("Could not unmarshall received user info : %s", err)
 	}
 
 	return ret, nil

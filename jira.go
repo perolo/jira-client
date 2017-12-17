@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"reflect"
 
 	"github.com/google/go-querystring/query"
 )
+
+var Debug bool
 
 // A Client manages communication with the JIRA API.
 type Client struct {
@@ -226,11 +229,39 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 	if v != nil {
 		// Open a NewDecoder and defer closing the reader only if there is a provided interface to decode to
 		defer httpResp.Body.Close()
+		if Debug {
+			body, _ := ioutil.ReadAll(httpResp.Body)
+			fmt.Printf("resp: %v\n", string(body))
+		}
 		err = json.NewDecoder(httpResp.Body).Decode(v)
 	}
 
 	resp := newResponse(httpResp, v)
 	return resp, err
+}
+
+func (c *Client) Save(req *http.Request, filename string) error {
+	httpResp, err := c.client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	err = CheckResponse(httpResp)
+	if err != nil {
+		// Even though there was an error, we still return the response
+		// in case the caller wants to inspect it further
+		return err
+	}
+
+	// Open a NewDecoder and defer closing the reader only if there is a provided interface to decode to
+	defer httpResp.Body.Close()
+	body, err := ioutil.ReadAll(httpResp.Body)
+	if err != nil {
+		return err
+	}
+	ioutil.WriteFile(filename, body, 0600)
+
+	return err
 }
 
 // CheckResponse checks the API response for errors, and returns them if present.

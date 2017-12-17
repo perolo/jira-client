@@ -137,7 +137,7 @@ func (i *IssueFields) MarshalJSON() ([]byte, error) {
 	m := structs.Map(i)
 	unknowns, okay := m["Unknowns"]
 	if okay {
-		// if unknowns present, shift all key value from unkown to a level up
+		// if unknowns present, shift all key value from unknown to a level up
 		for key, value := range unknowns.(tcontainer.MarshalMap) {
 			m[key] = value
 		}
@@ -297,7 +297,7 @@ type Transition struct {
 	Fields map[string]TransitionField `json:"fields" structs:"fields"`
 }
 
-// TransitionField represents the value of one Transistion
+// TransitionField represents the value of one Transition
 type TransitionField struct {
 	Required bool `json:"required" structs:"required"`
 }
@@ -307,9 +307,15 @@ type CreateTransitionPayload struct {
 	Transition TransitionPayload `json:"transition" structs:"transition"`
 }
 
-// TransitionPayload represents the request payload of Transistion calls like DoTransition
+// TransitionPayload represents the request payload of Transition calls like DoTransition
 type TransitionPayload struct {
 	ID string `json:"id" structs:"id"`
+}
+
+// Option represents an option value in a SelectList or MultiSelect
+// custom issue field
+type Option struct {
+	Value string `json:"value" structs:"value"`
 }
 
 // UnmarshalJSON will transform the JIRA time into a time.Time
@@ -435,7 +441,8 @@ type SearchOptions struct {
 	// MaxResults: The maximum number of projects to return per page. Default: 50.
 	MaxResults int `url:"maxResults,omitempty"`
 	// Expand: Expand specific sections in the returned issues
-	Expand string `url:expand,omitempty"`
+	Expand string `url:"expand,omitempty"`
+	Fields []string
 }
 
 // searchResult is only a small wrapper around the Search (with JQL) method
@@ -489,7 +496,8 @@ func (s *IssueService) Get(issueID string, options *GetQueryOptions) (*Issue, *R
 	issue := new(Issue)
 	resp, err := s.client.Do(req, issue)
 	if err != nil {
-		return nil, resp, err
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
 	}
 
 	return issue, resp, nil
@@ -508,15 +516,16 @@ func (s *IssueService) DownloadAttachment(attachmentID string) (*Response, error
 
 	resp, err := s.client.Do(req, nil)
 	if err != nil {
-		return resp, err
+		jerr := NewJiraError(resp, err)
+		return resp, jerr
 	}
 
 	return resp, nil
 }
 
-// PostAttachment uploads r (io.Reader) as an attachment to a given attachmentID
-func (s *IssueService) PostAttachment(attachmentID string, r io.Reader, attachmentName string) (*[]Attachment, *Response, error) {
-	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%s/attachments", attachmentID)
+// PostAttachment uploads r (io.Reader) as an attachment to a given issueID
+func (s *IssueService) PostAttachment(issueID string, r io.Reader, attachmentName string) (*[]Attachment, *Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%s/attachments", issueID)
 
 	b := new(bytes.Buffer)
 	writer := multipart.NewWriter(b)
@@ -545,10 +554,28 @@ func (s *IssueService) PostAttachment(attachmentID string, r io.Reader, attachme
 	attachment := new([]Attachment)
 	resp, err := s.client.Do(req, attachment)
 	if err != nil {
-		return nil, resp, err
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
 	}
 
 	return attachment, resp, nil
+}
+
+// GetWorklogs gets all the worklogs for an issue.
+// This method is especially important if you need to read all the worklogs, not just the first page.
+//
+// https://docs.atlassian.com/jira/REST/cloud/#api/2/issue/{issueIdOrKey}/worklog-getIssueWorklog
+func (s *IssueService) GetWorklogs(issueID string) (*Worklog, *Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%s/worklog", issueID)
+
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	v := new(Worklog)
+	resp, err := s.client.Do(req, v)
+	return v, resp, err
 }
 
 // Create creates an issue or a sub-task from a JSON representation.
@@ -581,6 +608,46 @@ func (s *IssueService) Create(issue *Issue) (*Issue, *Response, error) {
 	return responseIssue, resp, nil
 }
 
+// Update updates an issue from a JSON representation. The issue is found by key.
+//
+// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/issue-editIssue
+func (s *IssueService) Update(issue *Issue) (*Issue, *Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%v", issue.Key)
+	req, err := s.client.NewRequest("PUT", apiEndpoint, issue)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+
+	// This is just to follow the rest of the API's convention of returning an issue.
+	// Returning the same pointer here is pointless, so we return a copy instead.
+	ret := *issue
+	return &ret, resp, nil
+}
+
+// Update updates an issue from a JSON representation. The issue is found by key.
+//
+// https://docs.atlassian.com/jira/REST/7.4.0/#api/2/issue-editIssue
+func (s *IssueService) UpdateIssue(jiraId string, data map[string]interface{}) (*Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%v", jiraId)
+	req, err := s.client.NewRequest("PUT", apiEndpoint, data)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		return resp, err
+	}
+
+	// This is just to follow the rest of the API's convention of returning an issue.
+	// Returning the same pointer here is pointless, so we return a copy instead.
+	return resp, nil
+}
+
 // AddComment adds a new comment to issueID.
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/issue-addComment
@@ -611,6 +678,10 @@ func (s *IssueService) AddLink(issueLink *IssueLink) (*Response, error) {
 	}
 
 	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		err = NewJiraError(resp, err)
+	}
+
 	return resp, err
 }
 
@@ -633,7 +704,50 @@ fmt.Println("u: " + u)
 
 	v := new(searchResult)
 	resp, err := s.client.Do(req, v)
+	if err != nil {
+		err = NewJiraError(resp, err)
+	}
 	return v.Issues, resp, err
+}
+
+// SearchPages will get issues from all pages in a search
+//
+// JIRA API docs: https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-query-issues
+func (s *IssueService) SearchPages(jql string, options *SearchOptions, f func(Issue) error) error {
+	if options == nil {
+		options = &SearchOptions{
+			StartAt:    0,
+			MaxResults: 50,
+		}
+	}
+
+	if options.MaxResults == 0 {
+		options.MaxResults = 50
+	}
+
+	issues, resp, err := s.Search(jql, options)
+	if err != nil {
+		return err
+	}
+
+	for {
+		for _, issue := range issues {
+			err = f(issue)
+			if err != nil {
+				return err
+			}
+		}
+
+		if resp.StartAt+resp.MaxResults >= resp.Total {
+			return nil
+		}
+
+		options.StartAt += resp.MaxResults
+		issues, resp, err = s.Search(jql, options)
+		if err != nil {
+			return err
+		}
+	}
 }
 
 // GetCustomFields returns a map of customfield_* keys with string values
@@ -647,7 +761,8 @@ func (s *IssueService) GetCustomFields(issueID string) (CustomFields, *Response,
 	issue := new(map[string]interface{})
 	resp, err := s.client.Do(req, issue)
 	if err != nil {
-		return nil, resp, err
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
 	}
 
 	m := *issue
@@ -685,6 +800,9 @@ func (s *IssueService) GetTransitions(id string) ([]Transition, *Response, error
 
 	result := new(transitionResult)
 	resp, err := s.client.Do(req, result)
+	if err != nil {
+		err = NewJiraError(resp, err)
+	}
 	return result.Transitions, resp, err
 }
 
@@ -693,13 +811,21 @@ func (s *IssueService) GetTransitions(id string) ([]Transition, *Response, error
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/issue-doTransition
 func (s *IssueService) DoTransition(ticketID, transitionID string) (*Response, error) {
-	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%s/transitions", ticketID)
-
 	payload := CreateTransitionPayload{
 		Transition: TransitionPayload{
 			ID: transitionID,
 		},
 	}
+	return s.DoTransitionWithPayload(ticketID, payload)
+}
+
+// DoTransitionWithPayload performs a transition on an issue using any payload.
+// When performing the transition you can update or set other issue fields.
+//
+// JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/issue-doTransition
+func (s *IssueService) DoTransitionWithPayload(ticketID, payload interface{}) (*Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%s/transitions", ticketID)
+
 	req, err := s.client.NewRequest("POST", apiEndpoint, payload)
 	if err != nil {
 		return nil, err
@@ -707,17 +833,17 @@ func (s *IssueService) DoTransition(ticketID, transitionID string) (*Response, e
 
 	resp, err := s.client.Do(req, nil)
 	if err != nil {
-		return nil, err
+		err = NewJiraError(resp, err)
 	}
 
-	return resp, nil
+	return resp, err
 }
 
 // InitIssueWithMetaAndFields returns Issue with with values from fieldsConfig properly set.
 //  * metaProject should contain metaInformation about the project where the issue should be created.
 //  * metaIssuetype is the MetaInformation about the Issuetype that needs to be created.
 //  * fieldsConfig is a key->value pair where key represents the name of the field as seen in the UI
-// 		And value is the string value for that particular key.
+//		And value is the string value for that particular key.
 // Note: This method doesn't verify that the fieldsConfig is complete with mandatory fields. The fieldsConfig is
 //		 supposed to be already verified with MetaIssueType.CheckCompleteAndAvailable. It will however return
 //		 error if the key is not found.
@@ -748,13 +874,17 @@ func InitIssueWithMetaAndFields(metaProject *MetaProject, metaIssuetype *MetaIss
 			}
 			switch elemType {
 			case "component":
-				issueFields.Unknowns[jiraKey] = []Component{Component{Name: value}}
+				issueFields.Unknowns[jiraKey] = []Component{{Name: value}}
+			case "option":
+				issueFields.Unknowns[jiraKey] = []map[string]string{{"value": value}}
 			default:
 				issueFields.Unknowns[jiraKey] = []string{value}
 			}
 		case "string":
 			issueFields.Unknowns[jiraKey] = value
 		case "date":
+			issueFields.Unknowns[jiraKey] = value
+		case "datetime":
 			issueFields.Unknowns[jiraKey] = value
 		case "any":
 			// Treat any as string
@@ -774,6 +904,10 @@ func InitIssueWithMetaAndFields(metaProject *MetaProject, metaIssuetype *MetaIss
 			issueFields.Unknowns[jiraKey] = IssueType{
 				Name: value,
 			}
+		case "option":
+			issueFields.Unknowns[jiraKey] = Option{
+				Value: value,
+			}
 		default:
 			return nil, fmt.Errorf("Unknown issue type encountered: %s for %s", valueType, key)
 		}
@@ -782,4 +916,22 @@ func InitIssueWithMetaAndFields(metaProject *MetaProject, metaIssuetype *MetaIss
 	issue.Fields = issueFields
 
 	return issue, nil
+}
+
+// Delete will delete a specified issue.
+func (s *IssueService) Delete(issueID string) (*Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%s", issueID)
+
+	// to enable deletion of subtasks; without this, the request will fail if the issue has subtasks
+	deletePayload := make(map[string]interface{})
+	deletePayload["deleteSubtasks"] = "true"
+	content, _ := json.Marshal(deletePayload)
+
+	req, err := s.client.NewRequest("DELETE", apiEndpoint, content)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := s.client.Do(req, nil)
+	return resp, err
 }

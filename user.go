@@ -37,6 +37,13 @@ type User struct {
 	Group        	GroupsType `json:"groups,omitempty" structs:"groups,omitempty"`
 	TimeZone        string     `json:"timeZone,omitempty" structs:"timeZone,omitempty"`
 	ApplicationRoles ApplicationRolesType   `json:"applicationRoles,omitempty" structs:"applicationRoles,omitempty"`
+	ApplicationKeys []string   `json:"applicationKeys,omitempty" structs:"applicationKeys,omitempty"`
+}
+
+// UserGroup represents the group list
+type UserGroup struct {
+	Self string `json:"self,omitempty" structs:"self,omitempty"`
+	Name string `json:"name,omitempty" structs:"name,omitempty"`
 }
 
 // Get gets user info from JIRA
@@ -53,7 +60,7 @@ func (s *UserService) Get(username string) (*User, *Response, error) {
 //fmt.Println("apiEndpoint: " + apiEndpoint)
 	resp, err := s.client.Do(req, user)
 	if err != nil {
-		return nil, resp, err
+		return nil, resp, NewJiraError(resp, err)
 	}
 	return user, resp, nil
 }
@@ -77,11 +84,13 @@ func (s *UserService) Create(user *User) (*User, *Response, error) {
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, resp, fmt.Errorf("Could not read the returned data")
+		e := fmt.Errorf("Could not read the returned data")
+		return nil, resp, NewJiraError(resp, e)
 	}
 	err = json.Unmarshal(data, responseUser)
 	if err != nil {
-		return nil, resp, fmt.Errorf("Could not unmarshall the data into struct")
+		e := fmt.Errorf("Could not unmarshall the data into struct")
+		return nil, resp, NewJiraError(resp, e)
 	}
 	return responseUser, resp, nil
 }

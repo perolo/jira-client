@@ -78,6 +78,54 @@ func TestIssueService_Create(t *testing.T) {
 	}
 }
 
+func TestIssueService_Update(t *testing.T) {
+	setup()
+	defer teardown()
+	testMux.HandleFunc("/rest/api/2/issue/PROJ-9001", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "PUT")
+		testRequestURL(t, r, "/rest/api/2/issue/PROJ-9001")
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	i := &Issue{
+		Key: "PROJ-9001",
+		Fields: &IssueFields{
+			Description: "example bug report",
+		},
+	}
+	issue, _, err := testClient.Issue.Update(i)
+	if issue == nil {
+		t.Error("Expected issue. Issue is nil")
+	}
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
+}
+
+func TestIssueService_UpdateIssue(t *testing.T) {
+	setup()
+	defer teardown()
+	testMux.HandleFunc("/rest/api/2/issue/PROJ-9001", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "PUT")
+		testRequestURL(t, r, "/rest/api/2/issue/PROJ-9001")
+
+		w.WriteHeader(http.StatusNoContent)
+	})
+	jId := "PROJ-9001"
+	i := make(map[string]interface{})
+	fields := make(map[string]interface{})
+	i["fields"] = fields
+	resp, err := testClient.Issue.UpdateIssue(jId, i)
+	if resp == nil {
+		t.Error("Expected resp. resp is nil")
+	}
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
+
+}
+
 func TestIssueService_AddComment(t *testing.T) {
 	setup()
 	defer teardown()
@@ -97,6 +145,34 @@ func TestIssueService_AddComment(t *testing.T) {
 		},
 	}
 	comment, _, err := testClient.Issue.AddComment("10000", c)
+	if comment == nil {
+		t.Error("Expected Comment. Comment is nil")
+	}
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
+}
+
+func TestIssueService_UpdateComment(t *testing.T) {
+	setup()
+	defer teardown()
+	testMux.HandleFunc("/rest/api/2/issue/10000/comment/10001", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testRequestURL(t, r, "/rest/api/2/issue/10000/comment/10001")
+
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprint(w, `{"self":"http://www.example.com/jira/rest/api/2/issue/10010/comment/10001","id":"10001","author":{"self":"http://www.example.com/jira/rest/api/2/user?username=fred","name":"fred","displayName":"Fred F. User","active":false},"body":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eget venenatis elit. Duis eu justo eget augue iaculis fermentum. Sed semper quam laoreet nisi egestas at posuere augue semper.","updateAuthor":{"self":"http://www.example.com/jira/rest/api/2/user?username=fred","name":"fred","displayName":"Fred F. User","active":false},"created":"2016-03-16T04:22:37.356+0000","updated":"2016-03-16T04:22:37.356+0000","visibility":{"type":"role","value":"Administrators"}}`)
+	})
+
+	c := &Comment{
+		ID:   "10001",
+		Body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque eget venenatis elit. Duis eu justo eget augue iaculis fermentum. Sed semper quam laoreet nisi egestas at posuere augue semper.",
+		Visibility: CommentVisibility{
+			Type:  "role",
+			Value: "Administrators",
+		},
+	}
+	comment, _, err := testClient.Issue.UpdateComment("10000", c)
 	if comment == nil {
 		t.Error("Expected Comment. Comment is nil")
 	}
@@ -346,12 +422,12 @@ func TestIssueService_Search(t *testing.T) {
 	defer teardown()
 	testMux.HandleFunc("/rest/api/2/search", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		testRequestURL(t, r, "/rest/api/2/search?jql=something&startAt=1&maxResults=40")
+		testRequestURL(t, r, "/rest/api/2/search?jql=something&startAt=1&maxResults=40&expand=foo")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprint(w, `{"expand": "schema,names","startAt": 1,"maxResults": 40,"total": 6,"issues": [{"expand": "html","id": "10230","self": "http://kelpie9:8081/rest/api/2/issue/BULK-62","key": "BULK-62","fields": {"summary": "testing","timetracking": null,"issuetype": {"self": "http://kelpie9:8081/rest/api/2/issuetype/5","id": "5","description": "The sub-task of the issue","iconUrl": "http://kelpie9:8081/images/icons/issue_subtask.gif","name": "Sub-task","subtask": true},"customfield_10071": null}},{"expand": "html","id": "10004","self": "http://kelpie9:8081/rest/api/2/issue/BULK-47","key": "BULK-47","fields": {"summary": "Cheese v1 2.0 issue","timetracking": null,"issuetype": {"self": "http://kelpie9:8081/rest/api/2/issuetype/3","id": "3","description": "A task that needs to be done.","iconUrl": "http://kelpie9:8081/images/icons/task.gif","name": "Task","subtask": false}}}]}`)
 	})
 
-	opt := &SearchOptions{StartAt: 1, MaxResults: 40}
+	opt := &SearchOptions{StartAt: 1, MaxResults: 40, Expand: "foo"}
 	_, resp, err := testClient.Issue.Search("something", opt)
 
 	if resp == nil {
@@ -399,6 +475,44 @@ func TestIssueService_Search_WithoutPaging(t *testing.T) {
 	}
 	if resp.Total != 6 {
 		t.Errorf("StartAt should populate with 6, %v given", resp.Total)
+	}
+}
+
+func TestIssueService_SearchPages(t *testing.T) {
+	setup()
+	defer teardown()
+	testMux.HandleFunc("/rest/api/2/search", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		if r.URL.String() == "/rest/api/2/search?jql=something&startAt=1&maxResults=2&expand=foo&fields=" {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprint(w, `{"expand": "schema,names","startAt": 1,"maxResults": 2,"total": 6,"issues": [{"expand": "html","id": "10230","self": "http://kelpie9:8081/rest/api/2/issue/BULK-62","key": "BULK-62","fields": {"summary": "testing","timetracking": null,"issuetype": {"self": "http://kelpie9:8081/rest/api/2/issuetype/5","id": "5","description": "The sub-task of the issue","iconUrl": "http://kelpie9:8081/images/icons/issue_subtask.gif","name": "Sub-task","subtask": true},"customfield_10071": null}},{"expand": "html","id": "10004","self": "http://kelpie9:8081/rest/api/2/issue/BULK-47","key": "BULK-47","fields": {"summary": "Cheese v1 2.0 issue","timetracking": null,"issuetype": {"self": "http://kelpie9:8081/rest/api/2/issuetype/3","id": "3","description": "A task that needs to be done.","iconUrl": "http://kelpie9:8081/images/icons/task.gif","name": "Task","subtask": false}}}]}`)
+			return
+		} else if r.URL.String() == "/rest/api/2/search?jql=something&startAt=3&maxResults=2&expand=foo&fields=" {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprint(w, `{"expand": "schema,names","startAt": 3,"maxResults": 2,"total": 6,"issues": [{"expand": "html","id": "10230","self": "http://kelpie9:8081/rest/api/2/issue/BULK-62","key": "BULK-62","fields": {"summary": "testing","timetracking": null,"issuetype": {"self": "http://kelpie9:8081/rest/api/2/issuetype/5","id": "5","description": "The sub-task of the issue","iconUrl": "http://kelpie9:8081/images/icons/issue_subtask.gif","name": "Sub-task","subtask": true},"customfield_10071": null}},{"expand": "html","id": "10004","self": "http://kelpie9:8081/rest/api/2/issue/BULK-47","key": "BULK-47","fields": {"summary": "Cheese v1 2.0 issue","timetracking": null,"issuetype": {"self": "http://kelpie9:8081/rest/api/2/issuetype/3","id": "3","description": "A task that needs to be done.","iconUrl": "http://kelpie9:8081/images/icons/task.gif","name": "Task","subtask": false}}}]}`)
+			return
+		} else if r.URL.String() == "/rest/api/2/search?jql=something&startAt=5&maxResults=2&expand=foo&fields=" {
+			w.WriteHeader(http.StatusOK)
+			fmt.Fprint(w, `{"expand": "schema,names","startAt": 5,"maxResults": 2,"total": 6,"issues": [{"expand": "html","id": "10230","self": "http://kelpie9:8081/rest/api/2/issue/BULK-62","key": "BULK-62","fields": {"summary": "testing","timetracking": null,"issuetype": {"self": "http://kelpie9:8081/rest/api/2/issuetype/5","id": "5","description": "The sub-task of the issue","iconUrl": "http://kelpie9:8081/images/icons/issue_subtask.gif","name": "Sub-task","subtask": true},"customfield_10071": null}}]}`)
+			return
+		}
+
+		t.Errorf("Unexpected URL: %v", r.URL)
+	})
+
+	opt := &SearchOptions{StartAt: 1, MaxResults: 2, Expand: "foo"}
+	issues := make([]Issue, 0)
+	err := testClient.Issue.SearchPages("something", opt, func(issue Issue) error {
+		issues = append(issues, issue)
+		return nil
+	})
+
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
+
+	if len(issues) != 5 {
+		t.Errorf("Expected 5 issues, %v given", len(issues))
 	}
 }
 
@@ -512,6 +626,65 @@ func TestIssueService_DoTransition(t *testing.T) {
 	}
 }
 
+func TestIssueService_DoTransitionWithPayload(t *testing.T) {
+	setup()
+	defer teardown()
+
+	testAPIEndpoint := "/rest/api/2/issue/123/transitions"
+
+	transitionID := "22"
+
+	customPayload := map[string]interface{}{
+		"update": map[string]interface{}{
+			"comment": []map[string]interface{}{
+				{
+					"add": map[string]string{
+						"body": "Hello World",
+					},
+				},
+			},
+		},
+		"transition": TransitionPayload{
+			ID: transitionID,
+		},
+	}
+
+	testMux.HandleFunc(testAPIEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "POST")
+		testRequestURL(t, r, testAPIEndpoint)
+
+		decoder := json.NewDecoder(r.Body)
+		payload := map[string]interface{}{}
+		err := decoder.Decode(&payload)
+		if err != nil {
+			t.Errorf("Got error: %v", err)
+		}
+
+		contains := func(key string) bool {
+			_, ok := payload[key]
+			return ok
+		}
+
+		if !contains("update") || !contains("transition") {
+			t.Fatalf("Excpected update, transition to be in payload, got %s instead", payload)
+		}
+
+		transition, ok := payload["transition"].(map[string]interface{})
+		if !ok {
+			t.Fatalf("Excpected transition to be in payload, got %s instead", payload["transition"])
+		}
+
+		if transition["id"].(string) != transitionID {
+			t.Errorf("Expected %s to be in payload, got %s instead", transitionID, transition["id"])
+		}
+	})
+	_, err := testClient.Issue.DoTransitionWithPayload("123", customPayload)
+
+	if err != nil {
+		t.Errorf("Got error: %v", err)
+	}
+}
+
 func TestIssueFields_TestMarshalJSON_PopulateUnknownsSuccess(t *testing.T) {
 	data := `{
 			"customfield_123":"test",
@@ -582,14 +755,14 @@ func TestIssueFields_TestMarshalJSON_PopulateUnknownsSuccess(t *testing.T) {
 	i := new(IssueFields)
 	err := json.Unmarshal([]byte(data), i)
 	if err != nil {
-		t.Errorf("Expected nil error, recieved %s", err)
+		t.Errorf("Expected nil error, received %s", err)
 	}
 
 	if len(i.Unknowns) != 1 {
-		t.Errorf("Expected 1 unknown field to be present, recieved %d", len(i.Unknowns))
+		t.Errorf("Expected 1 unknown field to be present, received %d", len(i.Unknowns))
 	}
 	if i.Description != "example bug report" {
-		t.Errorf("Expected description to be \"%s\", recieved \"%s\"", "example bug report", i.Description)
+		t.Errorf("Expected description to be \"%s\", received \"%s\"", "example bug report", i.Description)
 	}
 
 }
@@ -605,7 +778,7 @@ func TestIssueFields_MarshalJSON_OmitsEmptyFields(t *testing.T) {
 
 	rawdata, err := json.Marshal(i)
 	if err != nil {
-		t.Errorf("Expected nil err, recieved %s", err)
+		t.Errorf("Expected nil err, received %s", err)
 	}
 
 	// convert json to map and see if unset keys are there
@@ -617,7 +790,7 @@ func TestIssueFields_MarshalJSON_OmitsEmptyFields(t *testing.T) {
 
 	_, err = issuef.Int("issuetype/avatarId")
 	if err == nil {
-		t.Error("Expected non nil error, recieved nil")
+		t.Error("Expected non nil error, received nil")
 	}
 
 	// verify that the field that should be there, is.
@@ -647,18 +820,18 @@ func TestIssueFields_MarshalJSON_Success(t *testing.T) {
 
 	bytes, err := json.Marshal(i)
 	if err != nil {
-		t.Errorf("Expected nil err, recieved %s", err)
+		t.Errorf("Expected nil err, received %s", err)
 	}
 
-	recieved := new(IssueFields)
-	// the order of json might be different. so unmarshal it again and comapre objects
-	err = json.Unmarshal(bytes, recieved)
+	received := new(IssueFields)
+	// the order of json might be different. so unmarshal it again and compare objects
+	err = json.Unmarshal(bytes, received)
 	if err != nil {
-		t.Errorf("Expected nil err, recieved %s", err)
+		t.Errorf("Expected nil err, received %s", err)
 	}
 
-	if !reflect.DeepEqual(i, recieved) {
-		t.Errorf("Recieved object different from expected. Expected %+v, recieved %+v", i, recieved)
+	if !reflect.DeepEqual(i, received) {
+		t.Errorf("Received object different from expected. Expected %+v, received %+v", i, received)
 	}
 }
 
@@ -686,7 +859,7 @@ func TestInitIssueWithMetaAndFields_Success(t *testing.T) {
 
 	issue, err := InitIssueWithMetaAndFields(&metaProject, &metaIssueType, fieldConfig)
 	if err != nil {
-		t.Errorf("Expected nil error, recieved %s", err)
+		t.Errorf("Expected nil error, received %s", err)
 	}
 
 	gotSummary, found := issue.Fields.Unknowns["summary"]
@@ -695,7 +868,7 @@ func TestInitIssueWithMetaAndFields_Success(t *testing.T) {
 	}
 
 	if gotSummary != expectedSummary {
-		t.Errorf("Expected %s recieved %s", expectedSummary, gotSummary)
+		t.Errorf("Expected %s received %s", expectedSummary, gotSummary)
 	}
 }
 
@@ -725,26 +898,26 @@ func TestInitIssueWithMetaAndFields_ArrayValueType(t *testing.T) {
 
 	issue, err := InitIssueWithMetaAndFields(&metaProject, &metaIssueType, fieldConfig)
 	if err != nil {
-		t.Errorf("Expected nil error, recieved %s", err)
+		t.Errorf("Expected nil error, received %s", err)
 	}
 
 	c, isArray := issue.Fields.Unknowns["component"].([]Component)
 	if isArray == false {
-		t.Error("Expected array, non array object recieved")
+		t.Error("Expected array, non array object received")
 	}
 
 	if len(c) != 1 {
-		t.Errorf("Expected recieved array to be of length 1. Got %d", len(c))
+		t.Errorf("Expected received array to be of length 1. Got %d", len(c))
 	}
 
 	gotComponent := c[0].Name
 
 	if err != nil {
-		t.Errorf("Expected err to be nil, recieved %s", err)
+		t.Errorf("Expected err to be nil, received %s", err)
 	}
 
 	if gotComponent != expectedComponent {
-		t.Errorf("Expected %s recieved %s", expectedComponent, gotComponent)
+		t.Errorf("Expected %s received %s", expectedComponent, gotComponent)
 	}
 }
 
@@ -773,16 +946,16 @@ func TestInitIssueWithMetaAndFields_DateValueType(t *testing.T) {
 
 	issue, err := InitIssueWithMetaAndFields(&metaProject, &metaIssueType, fieldConfig)
 	if err != nil {
-		t.Errorf("Expected nil error, recieved %s", err)
+		t.Errorf("Expected nil error, received %s", err)
 	}
 
 	gotCreated, err := issue.Fields.Unknowns.String("created")
 	if err != nil {
-		t.Errorf("Expected err to be nil, recieved %s", err)
+		t.Errorf("Expected err to be nil, received %s", err)
 	}
 
 	if gotCreated != expectedCreated {
-		t.Errorf("Expected %s recieved %s", expectedCreated, gotCreated)
+		t.Errorf("Expected %s received %s", expectedCreated, gotCreated)
 	}
 }
 
@@ -811,14 +984,14 @@ func TestInitIssueWithMetaAndFields_UserValueType(t *testing.T) {
 
 	issue, err := InitIssueWithMetaAndFields(&metaProject, &metaIssueType, fieldConfig)
 	if err != nil {
-		t.Errorf("Expected nil error, recieved %s", err)
+		t.Errorf("Expected nil error, received %s", err)
 	}
 
 	a, _ := issue.Fields.Unknowns.Value("assignee")
 	gotAssignee := a.(User).Name
 
 	if gotAssignee != expectedAssignee {
-		t.Errorf("Expected %s recieved %s", expectedAssignee, gotAssignee)
+		t.Errorf("Expected %s received %s", expectedAssignee, gotAssignee)
 	}
 }
 
@@ -847,14 +1020,14 @@ func TestInitIssueWithMetaAndFields_ProjectValueType(t *testing.T) {
 
 	issue, err := InitIssueWithMetaAndFields(&metaProject, &metaIssueType, fieldConfig)
 	if err != nil {
-		t.Errorf("Expected nil error, recieved %s", err)
+		t.Errorf("Expected nil error, received %s", err)
 	}
 
 	a, _ := issue.Fields.Unknowns.Value("project")
 	gotProject := a.(Project).Name
 
 	if gotProject != metaProject.Name {
-		t.Errorf("Expected %s recieved %s", metaProject.Name, gotProject)
+		t.Errorf("Expected %s received %s", metaProject.Name, gotProject)
 	}
 }
 
@@ -883,14 +1056,50 @@ func TestInitIssueWithMetaAndFields_PriorityValueType(t *testing.T) {
 
 	issue, err := InitIssueWithMetaAndFields(&metaProject, &metaIssueType, fieldConfig)
 	if err != nil {
-		t.Errorf("Expected nil error, recieved %s", err)
+		t.Errorf("Expected nil error, received %s", err)
 	}
 
 	a, _ := issue.Fields.Unknowns.Value("priority")
 	gotPriority := a.(Priority).Name
 
 	if gotPriority != expectedPriority {
-		t.Errorf("Expected %s recieved %s", expectedPriority, gotPriority)
+		t.Errorf("Expected %s received %s", expectedPriority, gotPriority)
+	}
+}
+
+func TestInitIssueWithMetaAndFields_SelectList(t *testing.T) {
+	metaProject := MetaProject{
+		Name: "Engineering - Dept",
+		Id:   "ENG",
+	}
+
+	fields := tcontainer.NewMarshalMap()
+	fields["someitem"] = map[string]interface{}{
+		"name": "A Select Item",
+		"schema": map[string]interface{}{
+			"type": "option",
+		},
+	}
+
+	metaIssueType := MetaIssueType{
+		Fields: fields,
+	}
+
+	expectedVal := "Value"
+	fieldConfig := map[string]string{
+		"A Select Item": expectedVal,
+	}
+
+	issue, err := InitIssueWithMetaAndFields(&metaProject, &metaIssueType, fieldConfig)
+	if err != nil {
+		t.Errorf("Expected nil error, received %s", err)
+	}
+
+	a, _ := issue.Fields.Unknowns.Value("someitem")
+	gotVal := a.(Option).Value
+
+	if gotVal != expectedVal {
+		t.Errorf("Expected %s received %s", expectedVal, gotVal)
 	}
 }
 
@@ -919,14 +1128,14 @@ func TestInitIssueWithMetaAndFields_IssuetypeValueType(t *testing.T) {
 
 	issue, err := InitIssueWithMetaAndFields(&metaProject, &metaIssueType, fieldConfig)
 	if err != nil {
-		t.Errorf("Expected nil error, recieved %s", err)
+		t.Errorf("Expected nil error, received %s", err)
 	}
 
 	a, _ := issue.Fields.Unknowns.Value("issuetype")
 	gotIssuetype := a.(IssueType).Name
 
 	if gotIssuetype != expectedIssuetype {
-		t.Errorf("Expected %s recieved %s", expectedIssuetype, gotIssuetype)
+		t.Errorf("Expected %s received %s", expectedIssuetype, gotIssuetype)
 	}
 }
 
@@ -953,7 +1162,55 @@ func TestInitIssueWithmetaAndFields_FailureWithUnknownValueType(t *testing.T) {
 	}
 	_, err := InitIssueWithMetaAndFields(&metaProject, &metaIssueType, fieldConfig)
 	if err == nil {
-		t.Error("Expected non nil error, recieved nil")
+		t.Error("Expected non nil error, received nil")
 	}
 
+}
+
+func TestIssueService_Delete(t *testing.T) {
+	setup()
+	defer teardown()
+	testMux.HandleFunc("/rest/api/2/issue/10002", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "DELETE")
+		testRequestURL(t, r, "/rest/api/2/issue/10002")
+
+		w.WriteHeader(http.StatusNoContent)
+		fmt.Fprint(w, `{}`)
+	})
+
+	resp, err := testClient.Issue.Delete("10002")
+	if resp.StatusCode != 204 {
+		t.Error("Expected issue not deleted.")
+	}
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
+}
+
+func TestIssueService_GetWorklogs(t *testing.T) {
+	setup()
+	defer teardown()
+	testMux.HandleFunc("/rest/api/2/issue/10002/worklog", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		testRequestURL(t, r, "/rest/api/2/issue/10002/worklog")
+
+		fmt.Fprint(w, `{"startAt": 1,"maxResults": 40,"total": 1,"worklogs": [{"id": "3","self": "http://kelpie9:8081/rest/api/2/issue/10002/worklog/3","author":{"self":"http://www.example.com/jira/rest/api/2/user?username=fred","name":"fred","displayName":"Fred F. User","active":false},"updateAuthor":{"self":"http://www.example.com/jira/rest/api/2/user?username=fred","name":"fred","displayName":"Fred F. User","active":false},"created":"2016-03-16T04:22:37.356+0000","updated":"2016-03-16T04:22:37.356+0000","comment":"","started":"2016-03-16T04:22:37.356+0000","timeSpent": "1h","timeSpentSeconds": 3600,"issueId":"10002"}]}`)
+	})
+
+	worklog, _, err := testClient.Issue.GetWorklogs("10002")
+	if worklog == nil {
+		t.Error("Expected worklog. Worklog is nil")
+	}
+
+	if len(worklog.Worklogs) != 1 {
+		t.Error("Expected 1 worklog")
+	}
+
+	if worklog.Worklogs[0].Author.Name != "fred" {
+		t.Error("Expected worklog author to be fred")
+	}
+
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
 }
