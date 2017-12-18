@@ -80,40 +80,6 @@ func (s *UserService) Get(username string) (*User, *Response, error) {
 	return user, resp, nil
 }
 
-// Get gets Roles for project from JIRA
-//
-// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUser
-func (s *UserService) GetRoles(project string) ( *map[string]string , *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role", project)
-	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	role := make(map[string]string)
-//fmt.Println("apiEndpoint: " + apiEndpoint)
-	resp, err := s.client.Do(req, &role)
-	if err != nil {
-		return nil, resp, NewJiraError(resp, err)
-	}
-	return &role, resp, nil
-}
-
-// Get gets Role info from JIRA
-//
-func (s *UserService) GetProjectRole(link string) (*ProjectRole, *Response, error) {
-	req, err := s.client.NewRequest("GET", link, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	projrole := new(ProjectRole)
-	resp, err := s.client.Do(req, projrole)
-	if err != nil {
-		return nil, resp, NewJiraError(resp, err)
-	}
-	return projrole, resp, nil
-}
 
 // Create creates an user in JIRA.
 //

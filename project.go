@@ -2,6 +2,8 @@ package jira
 
 import (
 	"fmt"
+	"io/ioutil"
+	"encoding/json"
 )
 
 // ProjectService handles projects for the JIRA instance / API.
@@ -46,12 +48,14 @@ type Project struct {
 	AssigneeType string             `json:"assigneeType,omitempty" structs:"assigneeType,omitempty"`
 	Versions     []Version          `json:"versions,omitempty" structs:"versions,omitempty"`
 	Name         string             `json:"name,omitempty" structs:"name,omitempty"`
-	Roles        struct {
-		Developers string `json:"Developers,omitempty" structs:"Developers,omitempty"`
-	} `json:"roles,omitempty" structs:"roles,omitempty"`
+	Roles        map[string]string  `json:"roles,omitempty" structs:"roles,omitempty"`
 	AvatarUrls      AvatarUrls      `json:"avatarUrls,omitempty" structs:"avatarUrls,omitempty"`
 	ProjectCategory ProjectCategory `json:"projectCategory,omitempty" structs:"projectCategory,omitempty"`
 }
+//Roles        struct {
+//Developers string `json:"Developers,omitempty" structs:"Developers,omitempty"`
+//} `json:"roles,omitempty" structs:"roles,omitempty"`
+
 
 // Version represents a single release version of a project
 type Version struct {
@@ -121,4 +125,66 @@ func (s *ProjectService) Get(projectID string) (*Project, *Response, error) {
 	}
 
 	return project, resp, nil
+}
+
+// Get gets Roles for project from JIRA
+//
+// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUser
+func (s *UserService) GetRoles(project string) ( *map[string]string , *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role", project)
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	role := make(map[string]string)
+	//fmt.Println("apiEndpoint: " + apiEndpoint)
+	resp, err := s.client.Do(req, &role)
+	if err != nil {
+		return nil, resp, NewJiraError(resp, err)
+	}
+	return &role, resp, nil
+}
+
+// Get gets Role info from JIRA
+//
+func (s *UserService) GetProjectRole(link string) (*ProjectRole, *Response, error) {
+	req, err := s.client.NewRequest("GET", link, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	projrole := new(ProjectRole)
+	resp, err := s.client.Do(req, projrole)
+	if err != nil {
+		return nil, resp, NewJiraError(resp, err)
+	}
+	return projrole, resp, nil
+}
+
+func (s *UserService) SetProjectRole(user *User) (*User, *Response, error) {
+	apiEndpoint := "api/2/project/{projectIdOrKey}/role/{id}"
+	req, err := s.client.NewRequest("POST", apiEndpoint, user)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	responseUser := new(User)
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		e := fmt.Errorf("Could not read the returned data")
+		return nil, resp, NewJiraError(resp, e)
+	}
+	err = json.Unmarshal(data, responseUser)
+	if err != nil {
+		e := fmt.Errorf("Could not unmarshall the data into struct")
+		return nil, resp, NewJiraError(resp, e)
+	}
+	return responseUser, resp, nil
 }
