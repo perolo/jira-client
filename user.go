@@ -38,6 +38,8 @@ type User struct {
 	TimeZone        string     `json:"timeZone,omitempty" structs:"timeZone,omitempty"`
 	ApplicationRoles ApplicationRolesType   `json:"applicationRoles,omitempty" structs:"applicationRoles,omitempty"`
 	ApplicationKeys []string   `json:"applicationKeys,omitempty" structs:"applicationKeys,omitempty"`
+	Lokale          string     `json:"lokale,omitempty" structs:"lokale,omitempty"`
+	Expand          string     `json:"expand,omitempty" structs:"lokale,omitempty"`
 }
 
 // UserGroup represents the group list

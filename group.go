@@ -73,15 +73,38 @@ type GroupsType2 struct {
 	Groups     []Groups      `json:"groups,omitempty"  structs:"groups,omitempty`
 }
 
-// JIRA API docs: https://docs.atlassian.com/jira/REST/server/#api/2/group-getUsersFromGroup
-func (s *GroupService) GetGroups(options *GroupOptions) (*GroupsType2, *Response, error, int) {
+func (s *GroupService) GetGroups(opt *GroupOptions) (*GroupsType2, *Response, error) {
+	var u string
+	if opt == nil {
+		u = fmt.Sprintf("rest/api/2/groups/picker")
+	} else {
+		u = fmt.Sprintf("rest/api/2/groups/picker?startAt=%d&maxResults=%d", opt.StartAt, opt.MaxResults)
+	}
+	apiEndpoint := u
+	//url, err := addOptions(apiEndpoint, opt)
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	groups := new(GroupsType2)
+	resp, err := s.client.Do(req, groups)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+
+	return groups, resp, err
+}
+
+func (s *GroupService) GetGroups2(options *GroupOptions) (*GroupsType2, *Response, error, int) {
 	var u string
 	if options == nil {
 		u = fmt.Sprintf("/rest/api/2/groups/picker")
 	} else {
 		u = fmt.Sprintf("/rest/api/2/groups/picker&maxResults=%d", options.MaxResults)
 	}
-	fmt.Println("u: " + u)
+//	fmt.Println("u: " + u)
 	apiEndpoint := u
 	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
 	if err != nil {
@@ -111,7 +134,7 @@ func (s *GroupService) Get1(name string, options *GroupOptions) ([]GroupMember, 
 		u = fmt.Sprintf("rest/api/2/group/member?groupname=%s&startAt=%d&maxResults=%d", name,
 			options.StartAt, options.MaxResults)
 	}
-	fmt.Println("u: " + u)
+//	fmt.Println("u: " + u)
 	apiEndpoint := u
 	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
 	if err != nil {
