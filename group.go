@@ -211,6 +211,9 @@ func (s *GroupService) Add(groupname string, username string) (*Group, *Response
 		Name string `json:"name"`
 	}
 	user.Name = username
+
+	fmt.Println("apiEndpoint: " + apiEndpoint)
+	fmt.Println("user.Name: " + user.Name)
 	req, err := s.client.NewRequest("POST", apiEndpoint, &user)
 	if err != nil {
 		return nil, nil, err
@@ -220,6 +223,7 @@ func (s *GroupService) Add(groupname string, username string) (*Group, *Response
 	resp, err := s.client.Do(req, responseGroup)
 	if err != nil {
 		jerr := NewJiraError(resp, err)
+		fmt.Println("jerr: " + jerr.Error())
 		return nil, resp, jerr
 	}
 

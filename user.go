@@ -82,6 +82,22 @@ func (s *UserService) Get(username string) (*User, *Response, error) {
 	return user, resp, nil
 }
 
+func (s *UserService) Search(username string) (*[]User, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/user/search?username=%s", username)
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	user := new([]User)
+	//fmt.Println("apiEndpoint: " + apiEndpoint)
+	resp, err := s.client.Do(req, user)
+	if err != nil {
+		return nil, resp, NewJiraError(resp, err)
+	}
+	return user, resp, nil
+}
+
 
 // Create creates an user in JIRA.
 //
