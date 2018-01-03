@@ -2,6 +2,9 @@ package jira
 
 import (
 	"fmt"
+	"io/ioutil"
+	"encoding/json"
+	//"os/user"
 )
 
 // GroupService handles Groups for the JIRA instance / API.
@@ -36,11 +39,11 @@ type groupMembersResult struct {
 
 // Group represents a JIRA group
 type Group struct {
-	ID                   string          `json:"id"`
-	Title                string          `json:"title"`
-	Type                 string          `json:"type"`
-	Properties           groupProperties `json:"properties"`
-	AdditionalProperties bool            `json:"additionalProperties"`
+	ID                   string          `json:"id,omitempty"`
+	Title                string          `json:"title,omitempty"`
+	Type                 string          `json:"type,omitempty"`
+	Properties           groupProperties `json:"properties,omitempty"`
+	AdditionalProperties bool            `json:"additionalProperties,omitempty"`
 }
 
 type groupProperties struct {
@@ -65,6 +68,13 @@ type Groups struct {
 	Name         string `json:"name,omitempty" structs:"name,omitempty"`
 	Html         string `json:"html,omitempty" structs:"html,omitempty"`
 	labels       []string `json:"labels,omitempty"  structs:"labels,omitempty`
+}
+
+type GroupResp struct {
+	Self         string `json:"self,omitempty"`
+	Name         string `json:"name,omitempty"`
+	Expand       string `json:"expand,omitempty"`
+	Users        string `json:"users,omitempty" structs:"users,omitempty"`
 }
 
 type GroupsType2 struct {
@@ -205,28 +215,41 @@ func (s *GroupService) Get2(name string) ([]GroupMember, *Response, error) {
 // Add adds user to group
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/group-addUserToGroup
-func (s *GroupService) Add(groupname string, username string) (*Group, *Response, error) {
+func (s *GroupService) Add(groupname string, username string) (*GroupResp, *Response, error) {
 	apiEndpoint := fmt.Sprintf("/rest/api/2/group/user?groupname=%s", groupname)
 	var user struct {
 		Name string `json:"name"`
 	}
 	user.Name = username
 
-	fmt.Println("apiEndpoint: " + apiEndpoint)
-	fmt.Println("user.Name: " + user.Name)
+	//fmt.Println("apiEndpoint: " + apiEndpoint)
+	//fmt.Println("name: " + user.Name)
+
 	req, err := s.client.NewRequest("POST", apiEndpoint, &user)
 	if err != nil {
+		fmt.Println("Not OK: " + user.Name)
 		return nil, nil, err
 	}
 
-	responseGroup := new(Group)
-	resp, err := s.client.Do(req, responseGroup)
+	resp, err := s.client.Do(req, nil)
 	if err != nil {
-		jerr := NewJiraError(resp, err)
-		fmt.Println("jerr: " + jerr.Error())
-		return nil, resp, jerr
+		// in case of error return the resp for further inspection
+		return nil, resp, err
 	}
 
+	responseGroup := new(GroupResp)
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp, fmt.Errorf("Could not read the returned data")
+	}
+	//fmt.Println("resp.Response.Status: " + resp.Response.Status)
+	//fmt.Println("Data: " + string(data))
+
+	err = json.Unmarshal(data, responseGroup)
+	if err != nil {
+		return nil, resp, fmt.Errorf("Could not unmarshall the data into struct")
+	}
 	return responseGroup, resp, nil
 }
 

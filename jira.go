@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	"github.com/google/go-querystring/query"
+	"github.com/perolo/jira-utils/utilities"
 )
 
 var Debug bool
@@ -114,6 +115,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 	if err != nil {
 		return nil, err
 	}
+	utilities.PrintBuff(&body)
 
 	u := c.baseURL.ResolveReference(rel)
 
@@ -223,6 +225,7 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 	if err != nil {
 		// Even though there was an error, we still return the response
 		// in case the caller wants to inspect it further
+		fmt.Printf("resp status: %s\n", httpResp.Status)
 		return newResponse(httpResp, nil), err
 	}
 
