@@ -11,7 +11,7 @@ import (
 	"reflect"
 
 	"github.com/google/go-querystring/query"
-	"github.com/perolo/jira-utils/utilities"
+	//"github.com/perolo/jira-utils/utilities"
 )
 
 var Debug bool
@@ -115,7 +115,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 	if err != nil {
 		return nil, err
 	}
-	utilities.PrintBuff(&body)
+	//utilities.PrintBuff(&body)
 
 	u := c.baseURL.ResolveReference(rel)
 
