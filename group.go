@@ -106,7 +106,7 @@ func (s *GroupService) GetGroups(opt *GroupOptions) (*GroupsType2, *Response, er
 
 	return groups, resp, err
 }
-
+/*
 func (s *GroupService) GetGroups2(options *GroupOptions) (*GroupsType2, *Response, error, int) {
 	var u string
 	if options == nil {
@@ -129,14 +129,14 @@ func (s *GroupService) GetGroups2(options *GroupOptions) (*GroupsType2, *Respons
 
 	return groups, resp, nil, groups.Total
 }
-
+*/
 
 // Get returns a paginated list of users who are members of the specified group and its subgroups.
 // Users in the page are ordered by user names.
 // User of this resource is required to have sysadmin or admin permissions.
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/server/#api/2/group-getUsersFromGroup
-func (s *GroupService) Get1(name string, options *GroupOptions) ([]GroupMember, *Response, error, int) {
+func (s *GroupService) GetUsersFromGroup(name string, options *GroupOptions) ([]GroupMember, *Response, error, int) {
 	var u string
 	if options == nil {
 		u = fmt.Sprintf("rest/api/2/group/member?groupname=%s", name)
