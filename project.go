@@ -35,27 +35,27 @@ type ProjectCategory struct {
 
 // Project represents a JIRA Project.
 type Project struct {
-	Expand       string             `json:"expand,omitempty" structs:"expand,omitempty"`
-	Self         string             `json:"self,omitempty" structs:"self,omitempty"`
-	ID           string             `json:"id,omitempty" structs:"id,omitempty"`
-	Key          string             `json:"key,omitempty" structs:"key,omitempty"`
-	Description  string             `json:"description,omitempty" structs:"description,omitempty"`
-	Lead         User               `json:"lead,omitempty" structs:"lead,omitempty"`
-	Components   []ProjectComponent `json:"components,omitempty" structs:"components,omitempty"`
-	IssueTypes   []IssueType        `json:"issueTypes,omitempty" structs:"issueTypes,omitempty"`
-	URL          string             `json:"url,omitempty" structs:"url,omitempty"`
-	Email        string             `json:"email,omitempty" structs:"email,omitempty"`
-	AssigneeType string             `json:"assigneeType,omitempty" structs:"assigneeType,omitempty"`
-	Versions     []Version          `json:"versions,omitempty" structs:"versions,omitempty"`
-	Name         string             `json:"name,omitempty" structs:"name,omitempty"`
-	Roles        map[string]string  `json:"roles,omitempty" structs:"roles,omitempty"`
-	AvatarUrls      AvatarUrls      `json:"avatarUrls,omitempty" structs:"avatarUrls,omitempty"`
-	ProjectCategory ProjectCategory `json:"projectCategory,omitempty" structs:"projectCategory,omitempty"`
+	Expand          string             `json:"expand,omitempty" structs:"expand,omitempty"`
+	Self            string             `json:"self,omitempty" structs:"self,omitempty"`
+	ID              string             `json:"id,omitempty" structs:"id,omitempty"`
+	Key             string             `json:"key,omitempty" structs:"key,omitempty"`
+	Description     string             `json:"description,omitempty" structs:"description,omitempty"`
+	Lead            User               `json:"lead,omitempty" structs:"lead,omitempty"`
+	Components      []ProjectComponent `json:"components,omitempty" structs:"components,omitempty"`
+	IssueTypes      []IssueType        `json:"issueTypes,omitempty" structs:"issueTypes,omitempty"`
+	URL             string             `json:"url,omitempty" structs:"url,omitempty"`
+	Email           string             `json:"email,omitempty" structs:"email,omitempty"`
+	AssigneeType    string             `json:"assigneeType,omitempty" structs:"assigneeType,omitempty"`
+	Versions        []Version          `json:"versions,omitempty" structs:"versions,omitempty"`
+	Name            string             `json:"name,omitempty" structs:"name,omitempty"`
+	Roles           map[string]string  `json:"roles,omitempty" structs:"roles,omitempty"`
+	AvatarUrls      AvatarUrls         `json:"avatarUrls,omitempty" structs:"avatarUrls,omitempty"`
+	ProjectCategory ProjectCategory    `json:"projectCategory,omitempty" structs:"projectCategory,omitempty"`
 }
+
 //Roles        struct {
 //Developers string `json:"Developers,omitempty" structs:"Developers,omitempty"`
 //} `json:"roles,omitempty" structs:"roles,omitempty"`
-
 
 // Version represents a single release version of a project
 type Version struct {
@@ -83,6 +83,14 @@ type ProjectComponent struct {
 	IsAssigneeTypeValid bool   `json:"isAssigneeTypeValid" structs:"isAssigneeTypeValid,omitempty"`
 	Project             string `json:"project" structs:"project,omitempty"`
 	ProjectID           int    `json:"projectId" structs:"projectId,omitempty"`
+}
+
+type PropType struct {
+	Self string `json:"self,omitempty" structs:"self,omitempty"`
+	Key  string `json:"key,omitempty" structs:"key,omitempty"`
+}
+type ProjectProperties struct {
+	Keys []PropType `json:"keys,omitempty" structs:"keys,omitempty"`
 }
 
 // GetList gets all projects form JIRA
@@ -130,7 +138,7 @@ func (s *ProjectService) Get(projectID string) (*Project, *Response, error) {
 // Get gets Roles for project from JIRA
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUser
-func (s *UserService) GetRoles(project string) ( *map[string]string , *Response, error) {
+func (s *UserService) GetRoles(project string) (*map[string]string, *Response, error) {
 	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role", project)
 	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
 	if err != nil {
@@ -187,4 +195,21 @@ func (s *UserService) SetProjectRole(user *User) (*User, *Response, error) {
 		return nil, resp, NewJiraError(resp, e)
 	}
 	return responseUser, resp, nil
+}
+
+// Get gets Role info from JIRA
+//
+func (s *ProjectService) GetProjectProperties(project string) (*ProjectProperties, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/properties", project)
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	projprop := new(ProjectProperties)
+	resp, err := s.client.Do(req, projprop)
+	if err != nil {
+		return nil, resp, NewJiraError(resp, err)
+	}
+	return projprop, resp, nil
 }
