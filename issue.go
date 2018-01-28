@@ -41,12 +41,12 @@ type Issue struct {
 
 // ChangelogItems reflects one single changelog item of a history item
 type ChangelogItems struct {
-	Field      string      `json:"field" structs:"field"`
-	FieldType  string      `json:"fieldtype" structs:"fieldtype"`
-	From       interface{} `json:"from" structs:"from"`
-	FromString string      `json:"fromString" structs:"fromString"`
-	To         interface{} `json:"to" structs:"to"`
-	ToString   string      `json:"toString" structs:"toString"`
+	Field      string      `json:"field" structs:"field,omitempty"`
+	FieldType  string      `json:"fieldtype" structs:"fieldtype,omitempty"`
+	From       string `json:"from" structs:"from,omitempty"`
+	FromString string      `json:"fromString" structs:"fromString,omitempty"`
+	To         string `json:"to" structs:"to,omitempty"`
+	ToString   string      `json:"toString" structs:"toString,omitempty"`
 }
 
 // ChangelogHistory reflects one single changelog history entry
@@ -411,6 +411,13 @@ type Comment struct {
 	Visibility   CommentVisibility `json:"visibility,omitempty" structs:"visibility,omitempty"`
 }
 
+type GetCommentResponse struct {
+	StartAt    int             `json:"startAt" structs:"startAt,omitempty"`
+	MaxResults int             `json:"maxResults" structs:"maxResults,omitempty"`
+	Total      int             `json:"total" structs:"total,omitempty"`
+	Comments   []Comment `json:"comments" structs:"comments,omitempty"`
+
+}
 // FixVersion represents a software release in which an issue is fixed.
 type FixVersion struct {
 	Archived        *bool  `json:"archived,omitempty" structs:"archived,omitempty"`
@@ -693,9 +700,12 @@ func (s *IssueService) Search(jql string, options *SearchOptions) ([]Issue, *Res
 	var u string
 	if options == nil {
 		u = fmt.Sprintf("rest/api/2/search?jql=%s", url.QueryEscape(jql))
-	} else {
+	} else if options.Expand == ""{
 		u = fmt.Sprintf("rest/api/2/search?jql=%s&startAt=%d&maxResults=%d", url.QueryEscape(jql),
 			options.StartAt, options.MaxResults)
+	} else {
+		u = fmt.Sprintf("rest/api/2/search?jql=%s&startAt=%d&maxResults=%d&expand=%s", url.QueryEscape(jql),
+			options.StartAt, options.MaxResults, options.Expand)
 	}
 fmt.Println("u: " + u)
 	req, err := s.client.NewRequest("GET", u, nil)
@@ -935,4 +945,32 @@ func (s *IssueService) Delete(issueID string) (*Response, error) {
 
 	resp, err := s.client.Do(req, nil)
 	return resp, err
+}
+
+
+//GET /rest/api/2/issue/{issueIdOrKey}/comment
+
+func (s *IssueService) GetComments(issue string, options *SearchOptions) ([]Comment, *Response, error) {
+	var u string
+	if options == nil {
+		u = fmt.Sprintf("/rest/api/2/issue/%s/comment", issue)
+	} else if options.Expand == ""{
+		u = fmt.Sprintf("/rest/api/2/issue/%s/comment", issue,
+			options.StartAt, options.MaxResults)
+	} else {
+		u = fmt.Sprintf("/rest/api/2/issue/%s/comment", issue,
+			options.StartAt, options.MaxResults, options.Expand)
+	}
+//	fmt.Println("u: " + u)
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return []Comment{}, nil, err
+	}
+
+	v := new(GetCommentResponse)
+	resp, err := s.client.Do(req, v)
+	if err != nil {
+		err = NewJiraError(resp, err)
+	}
+	return v.Comments, resp, err
 }
