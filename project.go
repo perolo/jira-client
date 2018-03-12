@@ -93,6 +93,13 @@ type ProjectProperties struct {
 	Keys []PropType `json:"keys,omitempty" structs:"keys,omitempty"`
 }
 
+type PermissionResponseType struct {
+	Self        string `json:"self" structs:"self,omitempty"`
+	ID          int    `json:"id" structs:"id,omitempty"`
+	Name        string `json:"name" structs:"name,omitempty"`
+	Description string `json:"description" structs:"description,omitempty"`
+}
+
 // GetList gets all projects form JIRA
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/project-getAllProjects
@@ -186,12 +193,12 @@ func (s *UserService) SetProjectRole(user *User) (*User, *Response, error) {
 	defer resp.Body.Close()
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		e := fmt.Errorf("Could not read the returned data")
+		e := fmt.Errorf("could not read the returned data")
 		return nil, resp, NewJiraError(resp, e)
 	}
 	err = json.Unmarshal(data, responseUser)
 	if err != nil {
-		e := fmt.Errorf("Could not unmarshall the data into struct")
+		e := fmt.Errorf("could not unmarshall the data into struct")
 		return nil, resp, NewJiraError(resp, e)
 	}
 	return responseUser, resp, nil
@@ -212,4 +219,19 @@ func (s *ProjectService) GetProjectProperties(project string) (*ProjectPropertie
 		return nil, resp, NewJiraError(resp, err)
 	}
 	return projprop, resp, nil
+}
+
+func (s *ProjectService) GetProjectPermissionScheme(project string) (*PermissionResponseType, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/permissionscheme", project)
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	projperm := new(PermissionResponseType)
+	resp, err := s.client.Do(req, projperm)
+	if err != nil {
+		return nil, resp, NewJiraError(resp, err)
+	}
+	return projperm, resp, nil
 }
