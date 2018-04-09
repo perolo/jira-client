@@ -14,7 +14,9 @@ type ProjectService struct {
 }
 
 // ProjectList represent a list of Projects
-type ProjectList []struct {
+type ProjectList []ProjectType
+
+type ProjectType struct {
 	Expand          string          `json:"expand" structs:"expand"`
 	Self            string          `json:"self" structs:"self"`
 	ID              string          `json:"id" structs:"id"`
