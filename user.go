@@ -42,6 +42,15 @@ type User struct {
 	Expand          string     `json:"expand,omitempty" structs:"lokale,omitempty"`
 }
 
+type CreateUser struct {
+	Self            string     `json:"self,omitempty" structs:"self,omitempty"`
+	Name            string     `json:"name,omitempty" structs:"name,omitempty"`
+	Password        string     `json:"password,omitempty" structs:"password,omitempty"`
+	EmailAddress    string     `json:"emailAddress,omitempty" structs:"emailAddress,omitempty"`
+	DisplayName     string     `json:"displayName,omitempty" structs:"displayName,omitempty"`
+	ApplicationKeys []string   `json:"applicationKeys,omitempty" structs:"applicationKeys,omitempty"`
+}
+
 // UserGroup represents the group list
 type UserGroup struct {
 	Self string `json:"self,omitempty" structs:"self,omitempty"`
@@ -74,7 +83,7 @@ func (s *UserService) Get(username string) (*User, *Response, error) {
 	}
 
 	user := new(User)
-//fmt.Println("apiEndpoint: " + apiEndpoint)
+	//fmt.Println("apiEndpoint: " + apiEndpoint)
 	resp, err := s.client.Do(req, user)
 	if err != nil {
 		return nil, resp, NewJiraError(resp, err)
@@ -102,7 +111,7 @@ func (s *UserService) Search(username string) (*[]User, *Response, error) {
 // Create creates an user in JIRA.
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-createUser
-func (s *UserService) Create(user *User) (*User, *Response, error) {
+func (s *UserService) Create(user *CreateUser) (*User, *Response, error) {
 	apiEndpoint := "/rest/api/2/user"
 	req, err := s.client.NewRequest("POST", apiEndpoint, user)
 	if err != nil {
