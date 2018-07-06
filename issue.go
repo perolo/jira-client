@@ -707,7 +707,7 @@ func (s *IssueService) Search(jql string, options *SearchOptions) ([]Issue, *Res
 		u = fmt.Sprintf("rest/api/2/search?jql=%s&startAt=%d&maxResults=%d&expand=%s", url.QueryEscape(jql),
 			options.StartAt, options.MaxResults, options.Expand)
 	}
-fmt.Println("u: " + u)
+//fmt.Println("u: " + u)
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
 		return []Issue{}, nil, err
