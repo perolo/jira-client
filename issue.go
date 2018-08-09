@@ -75,6 +75,12 @@ type Attachment struct {
 	Thumbnail string `json:"thumbnail,omitempty" structs:"thumbnail,omitempty"`
 }
 
+type Votes struct {
+	Self      string `json:"self,omitempty" structs:"self,omitempty"`
+	Votes      int    `json:"votes,omitempty" structs:"votes,omitempty"`
+	HasVoted      bool    `json:"hasVoted,omitempty" structs:"hasVoted,omitempty"`
+}
+
 // Epic represents the epic to which an issue is associated
 // Not that this struct does not process the returned "color" value
 type Epic struct {
@@ -97,7 +103,7 @@ type IssueFields struct {
 	//      * "aggregatetimeestimate": null,
 	//      * "environment": null,
 	Expand               string        `json:"expand,omitempty" structs:"expand,omitempty"`
-	Type                 IssueType     `json:"issuetype" structs:"issuetype"`
+//	Type                 IssueType     `json:"issuetype" structs:"issuetype"`
 	Project              Project       `json:"project,omitempty" structs:"project,omitempty"`
 	Resolution           *Resolution   `json:"resolution,omitempty" structs:"resolution,omitempty"`
 	Priority             *Priority     `json:"priority,omitempty" structs:"priority,omitempty"`
@@ -410,6 +416,11 @@ type Comment struct {
 	Created      string            `json:"created,omitempty" structs:"created,omitempty"`
 	Visibility   CommentVisibility `json:"visibility,omitempty" structs:"visibility,omitempty"`
 }
+type AddComment struct {
+	Body         string            `json:"body,omitempty" structs:"body,omitempty"`
+	Visibility   CommentVisibility `json:"visibility,omitempty" structs:"visibility,omitempty"`
+}
+
 
 type GetCommentResponse struct {
 	StartAt    int             `json:"startAt" structs:"startAt,omitempty"`
@@ -659,7 +670,7 @@ func (s *IssueService) UpdateIssue(jiraId string, data map[string]interface{}) (
 // AddComment adds a new comment to issueID.
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/issue-addComment
-func (s *IssueService) AddComment(issueID string, comment *Comment) (*Comment, *Response, error) {
+func (s *IssueService) AddComment(issueID string, comment *AddComment) (*Comment, *Response, error) {
 	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%s/comment", issueID)
 	req, err := s.client.NewRequest("POST", apiEndpoint, comment)
 	if err != nil {
