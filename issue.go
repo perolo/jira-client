@@ -707,7 +707,7 @@ func (s *IssueService) AddLink(issueLink *IssueLink) (*Response, error) {
 // Search will search for tickets according to the jql
 //
 // JIRA API docs: https://developer.atlassian.com/jiradev/jira-apis/jira-rest-apis/jira-rest-api-tutorials/jira-rest-api-example-query-issues
-func (s *IssueService) Search(jql string, options *SearchOptions) ([]Issue, *Response, error) {
+func (s *IssueService) Search(jql string, options *SearchOptions) (*searchResult, *Response, error) {
 	var u string
 	if options == nil {
 		u = fmt.Sprintf("rest/api/2/search?jql=%s", url.QueryEscape(jql))
@@ -721,7 +721,7 @@ func (s *IssueService) Search(jql string, options *SearchOptions) ([]Issue, *Res
 //fmt.Println("u: " + u)
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
-		return []Issue{}, nil, err
+		return nil, nil, err
 	}
 
 	v := new(searchResult)
@@ -729,7 +729,7 @@ func (s *IssueService) Search(jql string, options *SearchOptions) ([]Issue, *Res
 	if err != nil {
 		err = NewJiraError(resp, err)
 	}
-	return v.Issues, resp, err
+	return v, resp, err
 }
 
 // SearchPages will get issues from all pages in a search
@@ -747,13 +747,13 @@ func (s *IssueService) SearchPages(jql string, options *SearchOptions, f func(Is
 		options.MaxResults = 50
 	}
 
-	issues, resp, err := s.Search(jql, options)
+	sresp, resp, err := s.Search(jql, options)
 	if err != nil {
 		return err
 	}
 
 	for {
-		for _, issue := range issues {
+		for _, issue := range sresp.Issues {
 			err = f(issue)
 			if err != nil {
 				return err
@@ -765,7 +765,7 @@ func (s *IssueService) SearchPages(jql string, options *SearchOptions, f func(Is
 		}
 
 		options.StartAt += resp.MaxResults
-		issues, resp, err = s.Search(jql, options)
+		sresp, resp, err = s.Search(jql, options)
 		if err != nil {
 			return err
 		}
