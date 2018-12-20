@@ -144,6 +144,23 @@ func (s *ProjectService) Get(projectID string) (*Project, *Response, error) {
 	return project, resp, nil
 }
 
+func (s *ProjectService) GetComponents(projectID string) (*[]Component2, *Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/project/%s/components", projectID)
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	comps := new([]Component2)
+	resp, err := s.client.Do(req, comps)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+
+	return comps, resp, nil
+}
+
 // Get gets Roles for project from JIRA
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUser

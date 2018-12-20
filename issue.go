@@ -255,6 +255,57 @@ type Component struct {
 	Name string `json:"name,omitempty" structs:"name,omitempty"`
 }
 
+type Component2 struct {
+	Self string `json:"self"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Lead struct {
+		Self       string `json:"self"`
+		Key        string `json:"key"`
+		Name       string `json:"name"`
+		AvatarUrls struct {
+			Four8X48  string `json:"48x48"`
+			Two4X24   string `json:"24x24"`
+			One6X16   string `json:"16x16"`
+			Three2X32 string `json:"32x32"`
+		} `json:"avatarUrls"`
+		DisplayName string `json:"displayName"`
+		Active      bool   `json:"active"`
+	} `json:"lead,omitempty"`
+	AssigneeType string `json:"assigneeType"`
+	Assignee     struct {
+		Self       string `json:"self"`
+		Key        string `json:"key"`
+		Name       string `json:"name"`
+		AvatarUrls struct {
+			Four8X48  string `json:"48x48"`
+			Two4X24   string `json:"24x24"`
+			One6X16   string `json:"16x16"`
+			Three2X32 string `json:"32x32"`
+		} `json:"avatarUrls"`
+		DisplayName string `json:"displayName"`
+		Active      bool   `json:"active"`
+	} `json:"assignee,omitempty"`
+	RealAssigneeType string `json:"realAssigneeType"`
+	RealAssignee     struct {
+		Self       string `json:"self"`
+		Key        string `json:"key"`
+		Name       string `json:"name"`
+		AvatarUrls struct {
+			Four8X48  string `json:"48x48"`
+			Two4X24   string `json:"24x24"`
+			One6X16   string `json:"16x16"`
+			Three2X32 string `json:"32x32"`
+		} `json:"avatarUrls"`
+		DisplayName string `json:"displayName"`
+		Active      bool   `json:"active"`
+	} `json:"realAssignee,omitempty"`
+	IsAssigneeTypeValid bool   `json:"isAssigneeTypeValid"`
+	Project             string `json:"project"`
+	ProjectID           int    `json:"projectId"`
+}
+
+
 // Status represents the current status of a JIRA issue.
 // Typical status are "Open", "In Progress", "Closed", ...
 // Status can be user defined in every JIRA instance.
