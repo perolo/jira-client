@@ -9,9 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-
 	"github.com/google/go-querystring/query"
-	//"github.com/perolo/jira-utils/utilities"
 )
 
 var Debug bool
