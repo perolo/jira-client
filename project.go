@@ -1,9 +1,10 @@
 package jira
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
-	"encoding/json"
+
+	"github.com/google/go-querystring/query"
 )
 
 // ProjectService handles projects for the JIRA instance / API.
@@ -12,9 +13,6 @@ import (
 type ProjectService struct {
 	client *Client
 }
-
-// ProjectList represent a list of Projects
-type ProjectList []ProjectType
 
 type ProjectType struct {
 	Expand          string          `json:"expand" structs:"expand"`
@@ -25,7 +23,11 @@ type ProjectType struct {
 	AvatarUrls      AvatarUrls      `json:"avatarUrls" structs:"avatarUrls"`
 	ProjectTypeKey  string          `json:"projectTypeKey" structs:"projectTypeKey"`
 	ProjectCategory ProjectCategory `json:"projectCategory,omitempty" structs:"projectsCategory,omitempty"`
+	IssueTypes      []IssueType     `json:"issueTypes,omitempty" structs:"issueTypes,omitempty"`
 }
+
+// ProjectList represent a list of Projects
+type ProjectList []ProjectType
 
 // ProjectCategory represents a single project category
 type ProjectCategory struct {
@@ -55,22 +57,6 @@ type Project struct {
 	ProjectCategory ProjectCategory    `json:"projectCategory,omitempty" structs:"projectCategory,omitempty"`
 }
 
-//Roles        struct {
-//Developers string `json:"Developers,omitempty" structs:"Developers,omitempty"`
-//} `json:"roles,omitempty" structs:"roles,omitempty"`
-
-// Version represents a single release version of a project
-type Version struct {
-	Self            string `json:"self" structs:"self,omitempty"`
-	ID              string `json:"id" structs:"id,omitempty"`
-	Name            string `json:"name" structs:"name,omitempty"`
-	Archived        bool   `json:"archived" structs:"archived,omitempty"`
-	Released        bool   `json:"released" structs:"released,omitempty"`
-	ReleaseDate     string `json:"releaseDate" structs:"releaseDate,omitempty"`
-	UserReleaseDate string `json:"userReleaseDate" structs:"userReleaseDate,omitempty"`
-	ProjectID       int    `json:"projectId" structs:"projectId,omitempty"` // Unlike other IDs, this is returned as a number
-}
-
 // ProjectComponent represents a single component of a project
 type ProjectComponent struct {
 	Self                string `json:"self" structs:"self,omitempty"`
@@ -87,29 +73,45 @@ type ProjectComponent struct {
 	ProjectID           int    `json:"projectId" structs:"projectId,omitempty"`
 }
 
-type PropType struct {
-	Self string `json:"self,omitempty" structs:"self,omitempty"`
-	Key  string `json:"key,omitempty" structs:"key,omitempty"`
-}
-type ProjectProperties struct {
-	Keys []PropType `json:"keys,omitempty" structs:"keys,omitempty"`
-}
-
-type PermissionResponseType struct {
-	Self        string `json:"self" structs:"self,omitempty"`
-	ID          int    `json:"id" structs:"id,omitempty"`
-	Name        string `json:"name" structs:"name,omitempty"`
-	Description string `json:"description" structs:"description,omitempty"`
+// PermissionScheme represents the permission scheme for the project
+type PermissionScheme struct {
+	Expand      string       `json:"expand" structs:"expand,omitempty"`
+	Self        string       `json:"self" structs:"self,omitempty"`
+	ID          int          `json:"id" structs:"id,omitempty"`
+	Name        string       `json:"name" structs:"name,omitempty"`
+	Description string       `json:"description" structs:"description,omitempty"`
+	Permissions []Permission `json:"permissions" structs:"permissions,omitempty"`
 }
 
-// GetList gets all projects form JIRA
+// GetListWithContext gets all projects form JIRA
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/project-getAllProjects
+func (s *ProjectService) GetListWithContext(ctx context.Context) (*ProjectList, *Response, error) {
+	return s.ListWithOptionsWithContext(ctx, &GetQueryOptions{})
+}
+
+// GetList wraps GetListWithContext using the background context.
 func (s *ProjectService) GetList() (*ProjectList, *Response, error) {
+	return s.GetListWithContext(context.Background())
+}
+
+// ListWithOptionsWithContext gets all projects form JIRA with optional query params, like &GetQueryOptions{Expand: "issueTypes"} to get
+// a list of all projects and their supported issuetypes
+//
+// JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/project-getAllProjects
+func (s *ProjectService) ListWithOptionsWithContext(ctx context.Context, options *GetQueryOptions) (*ProjectList, *Response, error) {
 	apiEndpoint := "rest/api/2/project"
-	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
+	}
+
+	if options != nil {
+		q, err := query.Values(options)
+		if err != nil {
+			return nil, nil, err
+		}
+		req.URL.RawQuery = q.Encode()
 	}
 
 	projectList := new(ProjectList)
@@ -122,14 +124,19 @@ func (s *ProjectService) GetList() (*ProjectList, *Response, error) {
 	return projectList, resp, nil
 }
 
-// Get returns a full representation of the project for the given issue key.
+// ListWithOptions wraps ListWithOptionsWithContext using the background context.
+func (s *ProjectService) ListWithOptions(options *GetQueryOptions) (*ProjectList, *Response, error) {
+	return s.ListWithOptionsWithContext(context.Background(), options)
+}
+
+// GetWithContext returns a full representation of the project for the given issue key.
 // JIRA will attempt to identify the project by the projectIdOrKey path parameter.
 // This can be an project id, or an project key.
 //
 // JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/project-getProject
-func (s *ProjectService) Get(projectID string) (*Project, *Response, error) {
+func (s *ProjectService) GetWithContext(ctx context.Context, projectID string) (*Project, *Response, error) {
 	apiEndpoint := fmt.Sprintf("rest/api/2/project/%s", projectID)
-	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -144,14 +151,46 @@ func (s *ProjectService) Get(projectID string) (*Project, *Response, error) {
 	return project, resp, nil
 }
 
-func (s *ProjectService) GetComponents(projectID string) (*[]Component2, *Response, error) {
+// Get wraps GetWithContext using the background context.
+func (s *ProjectService) Get(projectID string) (*Project, *Response, error) {
+	return s.GetWithContext(context.Background(), projectID)
+}
+
+// GetPermissionSchemeWithContext returns a full representation of the permission scheme for the project
+// JIRA will attempt to identify the project by the projectIdOrKey path parameter.
+// This can be an project id, or an project key.
+//
+// JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/project-getProject
+func (s *ProjectService) GetPermissionSchemeWithContext(ctx context.Context, projectID string) (*PermissionScheme, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/permissionscheme", projectID)
+	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ps := new(PermissionScheme)
+	resp, err := s.client.Do(req, ps)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+
+	return ps, resp, nil
+}
+
+// GetPermissionScheme wraps GetPermissionSchemeWithContext using the background context.
+func (s *ProjectService) GetPermissionScheme(projectID string) (*PermissionScheme, *Response, error) {
+	return s.GetPermissionSchemeWithContext(context.Background(), projectID)
+}
+
+func (s *ProjectService) GetComponents(projectID string) (*[]ComponentDetail, *Response, error) {
 	apiEndpoint := fmt.Sprintf("rest/api/2/project/%s/components", projectID)
 	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	comps := new([]Component2)
+	comps := new([]ComponentDetail)
 	resp, err := s.client.Do(req, comps)
 	if err != nil {
 		jerr := NewJiraError(resp, err)
@@ -161,96 +200,3 @@ func (s *ProjectService) GetComponents(projectID string) (*[]Component2, *Respon
 	return comps, resp, nil
 }
 
-// Get gets Roles for project from JIRA
-//
-// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUser
-func (s *UserService) GetRoles(project string) (*map[string]string, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role", project)
-	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	role := make(map[string]string)
-	//fmt.Println("apiEndpoint: " + apiEndpoint)
-	resp, err := s.client.Do(req, &role)
-	if err != nil {
-		return nil, resp, NewJiraError(resp, err)
-	}
-	return &role, resp, nil
-}
-
-// Get gets Role info from JIRA
-//
-func (s *UserService) GetProjectRole(link string) (*ProjectRole, *Response, error) {
-	req, err := s.client.NewRequest("GET", link, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	projrole := new(ProjectRole)
-	resp, err := s.client.Do(req, projrole)
-	if err != nil {
-		return nil, resp, NewJiraError(resp, err)
-	}
-	return projrole, resp, nil
-}
-
-func (s *UserService) SetProjectRole(user *User) (*User, *Response, error) {
-	apiEndpoint := "api/2/project/{projectIdOrKey}/role/{id}"
-	req, err := s.client.NewRequest("POST", apiEndpoint, user)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	responseUser := new(User)
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		e := fmt.Errorf("could not read the returned data")
-		return nil, resp, NewJiraError(resp, e)
-	}
-	err = json.Unmarshal(data, responseUser)
-	if err != nil {
-		e := fmt.Errorf("could not unmarshall the data into struct")
-		return nil, resp, NewJiraError(resp, e)
-	}
-	return responseUser, resp, nil
-}
-
-// Get gets Role info from JIRA
-//
-func (s *ProjectService) GetProjectProperties(project string) (*ProjectProperties, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/properties", project)
-	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	projprop := new(ProjectProperties)
-	resp, err := s.client.Do(req, projprop)
-	if err != nil {
-		return nil, resp, NewJiraError(resp, err)
-	}
-	return projprop, resp, nil
-}
-
-func (s *ProjectService) GetProjectPermissionScheme(project string) (*PermissionResponseType, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/permissionscheme", project)
-	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	projperm := new(PermissionResponseType)
-	resp, err := s.client.Do(req, projperm)
-	if err != nil {
-		return nil, resp, NewJiraError(resp, err)
-	}
-	return projperm, resp, nil
-}

@@ -3,6 +3,8 @@
 *.a
 *.so
 
+# Don't check in vendor
+vendor/
 # Folders
 _obj
 _test
