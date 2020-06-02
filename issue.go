@@ -111,13 +111,11 @@ type IssueFields struct {
 	Project                       Project           `json:"project,omitempty" structs:"project,omitempty"`
 	Resolution                    *Resolution       `json:"resolution,omitempty" structs:"resolution,omitempty"`
 	Priority                      *Priority         `json:"priority,omitempty" structs:"priority,omitempty"`
-//	Resolutiondate                time.Time              `json:"resolutiondate,omitempty" structs:"resolutiondate,omitempty"`
 	Resolutiondate                Time              `json:"resolutiondate,omitempty" structs:"resolutiondate,omitempty"`
 	Created                       Time              `json:"created,omitempty" structs:"created,omitempty"`
 	Duedate                       Date              `json:"duedate,omitempty" structs:"duedate,omitempty"`
 	Watches                       *Watches          `json:"watches,omitempty" structs:"watches,omitempty"`
 	Assignee                      *User             `json:"assignee,omitempty" structs:"assignee,omitempty"`
-//	Updated                       time.Time              `json:"updated,omitempty" structs:"updated,omitempty"`
 	Updated                       Time              `json:"updated,omitempty" structs:"updated,omitempty"`
 	Description                   string            `json:"description,omitempty" structs:"description,omitempty"`
 	Summary                       string            `json:"summary,omitempty" structs:"summary,omitempty"`
