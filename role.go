@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/qri-io/jsonschema"
 	"strings"
 )
 
@@ -105,20 +104,6 @@ func (s *RoleService) GetRolesForProjectWithContext(ctx context.Context, proj st
 	if err != nil {
 		return nil, nil, err
 	}
-	var schemaData = []byte(`{
-	"type": "object",
-		"patternProperties": {
-		".+": {
-			"type": "string",
-				"format": "uri"
-		}
-	},
-	"additionalProperties": false
-}`)
-	rs := &jsonschema.RootSchema{}
-	if err := json.Unmarshal(schemaData, rs); err != nil {
-		panic("unmarshal schema: " + err.Error())
-	}
 	resp, err := s.client.Do2(req)
 	if err != nil {
 		//jerr := NewJiraError(resp, err)
@@ -128,48 +113,19 @@ func (s *RoleService) GetRolesForProjectWithContext(ctx context.Context, proj st
 	if err := json.Unmarshal(resp, &doc); err != nil {
 		return nil, nil, nil
 	}
-	for k,v := range doc.(map[string]interface{}) { // .(map[string]string)
+	// Should be a better way of doing this:
+	for k,v := range doc.(map[string]interface{}) {
 		var r RoleType
 		r.Name = k
 		r.Rollnk = v.(string)
 		pos := strings.LastIndex(r.Rollnk, "/role/")
 		adjustedPos := pos + len("/role/")
 		r.ID =  r.Rollnk[adjustedPos:len(r.Rollnk)]
-		//r.ID = strings.TrimLeft(v.(string), "/role/")
-
 		rl = append(rl, r)
 	}
-
-	if errors, _ := rs.ValidateBytes(resp); len(errors) > 0 {
-		panic(errors)
-	}
-
-/*
-	roles := new([]Role)
-	resp, err := s.client.Do(req, roles)
-	if err != nil {
-		jerr := NewJiraError(resp, err)
-		return nil, resp, jerr
-	}
-
- */
 	return &rl, nil, err
 }
-/*
-type ActorStruct struct {
-	Self        string `json:"self"`
-	Name        string `json:"name"`
-	ID          int    `json:"id"`
-	Description string `json:"description"`
-	Actors      []struct {
-		ID          int    `json:"id"`
-		DisplayName string `json:"displayName"`
-		Type        string `json:"type"`
-		Name        string `json:"name"`
-		AvatarURL   string `json:"avatarUrl"`
-	} `json:"actors"`
-}
-*/
+
 // /rest/api/2/project/{projectIdOrKey}/role/{id}
 func (s *RoleService) GetActorsForProjectRoleWithContext(ctx context.Context, proj string, roleid string) (*Role, *Response, error) {
 	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role/%s", proj, roleid)

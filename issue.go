@@ -279,32 +279,32 @@ type ComponentDetail struct {
 	Name         string `json:"name"`
 	AssigneeType string `json:"assigneeType"`
 	Assignee     struct {
-	Self       string `json:"self"`
-	Key        string `json:"key"`
-	Name       string `json:"name"`
-	AvatarUrls struct {
-	Four8X48  string `json:"48x48"`
-	Two4X24   string `json:"24x24"`
-	One6X16   string `json:"16x16"`
-	Three2X32 string `json:"32x32"`
-} `json:"avatarUrls"`
-	DisplayName string `json:"displayName"`
-	Active      bool   `json:"active"`
-} `json:"assignee"`
+		Self       string `json:"self"`
+		Key        string `json:"key"`
+		Name       string `json:"name"`
+		AvatarUrls struct {
+			Four8X48  string `json:"48x48"`
+			Two4X24   string `json:"24x24"`
+			One6X16   string `json:"16x16"`
+			Three2X32 string `json:"32x32"`
+		} `json:"avatarUrls"`
+		DisplayName string `json:"displayName"`
+		Active      bool   `json:"active"`
+	} `json:"assignee"`
 	RealAssigneeType string `json:"realAssigneeType"`
 	RealAssignee     struct {
-	Self       string `json:"self"`
-	Key        string `json:"key"`
-	Name       string `json:"name"`
-	AvatarUrls struct {
-	Four8X48  string `json:"48x48"`
-	Two4X24   string `json:"24x24"`
-	One6X16   string `json:"16x16"`
-	Three2X32 string `json:"32x32"`
-} `json:"avatarUrls"`
-	DisplayName string `json:"displayName"`
-	Active      bool   `json:"active"`
-} `json:"realAssignee"`
+		Self       string `json:"self"`
+		Key        string `json:"key"`
+		Name       string `json:"name"`
+		AvatarUrls struct {
+			Four8X48  string `json:"48x48"`
+			Two4X24   string `json:"24x24"`
+			One6X16   string `json:"16x16"`
+			Three2X32 string `json:"32x32"`
+		} `json:"avatarUrls"`
+		DisplayName string `json:"displayName"`
+		Active      bool   `json:"active"`
+	} `json:"realAssignee"`
 	IsAssigneeTypeValid bool   `json:"isAssigneeTypeValid"`
 	Project             string `json:"project"`
 	ProjectID           int    `json:"projectId"`
@@ -506,9 +506,9 @@ type Comment struct {
 }
 
 type GetCommentResponse struct {
-	StartAt    int             `json:"startAt" structs:"startAt,omitempty"`
-	MaxResults int             `json:"maxResults" structs:"maxResults,omitempty"`
-	Total      int             `json:"total" structs:"total,omitempty"`
+	StartAt    int       `json:"startAt" structs:"startAt,omitempty"`
+	MaxResults int       `json:"maxResults" structs:"maxResults,omitempty"`
+	Total      int       `json:"total" structs:"total,omitempty"`
 	Comments   []Comment `json:"comments" structs:"comments,omitempty"`
 
 }
@@ -915,7 +915,7 @@ func (s *IssueService) GetComments(issue string, options *SearchOptions) ([]Comm
 	var u string
 	if options == nil {
 		u = fmt.Sprintf("/rest/api/2/issue/%s/comment", issue)
-	} else if options.Expand == ""{
+	} else if options.Expand == "" {
 		u = fmt.Sprintf("/rest/api/2/issue/%s/comment", issue,
 			options.StartAt, options.MaxResults)
 	} else {

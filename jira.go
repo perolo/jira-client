@@ -312,7 +312,7 @@ func (c *Client) Do2(req *http.Request) ([]byte, error) {
 
 	defer httpResp.Body.Close()
 	body, _ = ioutil.ReadAll(httpResp.Body)
-	fmt.Printf("resp: %v\n", string(body))
+//	fmt.Printf("resp: %v\n", string(body))
 //	resp := newResponse(httpResp, v)
 	return body, err
 }
