@@ -44,6 +44,7 @@ func TestBoardService_GetAllBoards_WithFilter(t *testing.T) {
 	testMux.HandleFunc(testAPIEdpoint, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		testRequestURL(t, r, testAPIEdpoint)
+		testRequestParams(t, r, map[string]string{"type": "scrum", "name": "Test", "startAt": "1", "maxResults": "10", "projectKeyOrId": "TE"})
 		fmt.Fprint(w, string(raw))
 	})
 
@@ -183,4 +184,68 @@ func TestBoardService_GetAllSprints(t *testing.T) {
 	if len(sprints) != 4 {
 		t.Errorf("Expected 4 transitions. Got %d", len(sprints))
 	}
+}
+
+func TestBoardService_GetAllSprintsWithOptions(t *testing.T) {
+	setup()
+	defer teardown()
+
+	testAPIEndpoint := "/rest/agile/1.0/board/123/sprint"
+
+	raw, err := ioutil.ReadFile("./mocks/sprints_filtered.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	testMux.HandleFunc(testAPIEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		testRequestURL(t, r, testAPIEndpoint)
+		fmt.Fprint(w, string(raw))
+	})
+
+	sprints, _, err := testClient.Board.GetAllSprintsWithOptions(123, &GetAllSprintsOptions{State: "active,future"})
+	if err != nil {
+		t.Errorf("Got error: %v", err)
+	}
+
+	if sprints == nil {
+		t.Error("Expected sprint list. Got nil.")
+		return
+	}
+
+	if len(sprints.Values) != 1 {
+		t.Errorf("Expected 1 transition. Got %d", len(sprints.Values))
+	}
+}
+
+func TestBoardService_GetBoardConfigoration(t *testing.T) {
+	setup()
+	defer teardown()
+	testAPIEndpoint := "/rest/agile/1.0/board/35/configuration"
+
+	raw, err := ioutil.ReadFile("./mocks/board_configuration.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	testMux.HandleFunc(testAPIEndpoint, func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "GET")
+		testRequestURL(t, r, testAPIEndpoint)
+		fmt.Fprint(w, string(raw))
+	})
+
+	boardConfiguration, _, err := testClient.Board.GetBoardConfiguration(35)
+	if err != nil {
+		t.Errorf("Got error: %v", err)
+	}
+
+	if boardConfiguration == nil {
+		t.Error("Expected boardConfiguration. Got nil.")
+		return
+	}
+
+	if len(boardConfiguration.ColumnConfig.Columns) != 6 {
+		t.Errorf("Expected 6 columns. go %d", len(boardConfiguration.ColumnConfig.Columns))
+	}
+
 }

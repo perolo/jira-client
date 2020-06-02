@@ -1,123 +1,113 @@
 package jira
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/google/go-querystring/query"
+	"io/ioutil"
 )
 
-/*
-const (
-	// AssigneeAutomatic represents the value of the "Assignee: Automatic" of JIRA
-	AssigneeAutomatic = "-1"
-)
-*/
-
-// IssueService handles Issues for the JIRA instance / API.
+// VersionService handles Versions for the JIRA instance / API.
 //
-// JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/issue
+// JIRA API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/version
 type VersionService struct {
 	client *Client
 }
 
-type Version2 struct {
-	Self            string `json:"self"`
-	ID              string `json:"id"`
-	Description     string `json:"description"`
-	Name            string `json:"name"`
-	Archived        bool   `json:"archived"`
-	Released        bool   `json:"released"`
-	StartDate       string `json:"startDate"`
-	ReleaseDate     string `json:"releaseDate"`
-	Overdue         bool   `json:"overdue"`
-	UserStartDate   string `json:"userStartDate"`
-	UserReleaseDate string `json:"userReleaseDate"`
-	ProjectID       int    `json:"projectId"`
+// Version represents a single release version of a project
+type Version struct {
+	Self            string `json:"self,omitempty" structs:"self,omitempty"`
+	ID              string `json:"id,omitempty" structs:"id,omitempty"`
+	Name            string `json:"name,omitempty" structs:"name,omitempty"`
+	Description     string `json:"description,omitempty" structs:"description,omitempty"`
+	Archived        bool   `json:"archived,omitempty" structs:"archived,omitempty"`
+	Released        bool   `json:"released,omitempty" structs:"released,omitempty"`
+	ReleaseDate     string `json:"releaseDate,omitempty" structs:"releaseDate,omitempty"`
+	UserReleaseDate string `json:"userReleaseDate,omitempty" structs:"userReleaseDate,omitempty"`
+	ProjectID       int    `json:"projectId,omitempty" structs:"projectId,omitempty"` // Unlike other IDs, this is returned as a number
+	StartDate       string `json:"startDate,omitempty" structs:"startDate,omitempty"`
 }
 
-func (s *VersionService) Get(versionID string, options *GetQueryOptions) (*Version2, *Response, error) {
-	apiEndpoint := fmt.Sprintf("rest/api/latest/version/%s", versionID)
-	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+// GetWithContext gets version info from JIRA
+//
+// JIRA API docs: https://developer.atlassian.com/cloud/jira/platform/rest/#api-api-2-version-id-get
+func (s *VersionService) GetWithContext(ctx context.Context, versionID int) (*Version, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/version/%v", versionID)
+	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if options != nil {
-		q, err := query.Values(options)
-		if err != nil {
-			return nil, nil, err
-		}
-		req.URL.RawQuery = q.Encode()
-	}
-
-	version := new(Version2)
+	version := new(Version)
 	resp, err := s.client.Do(req, version)
 	if err != nil {
-		jerr := NewJiraError(resp, err)
-		return nil, resp, jerr
+		return nil, resp, NewJiraError(resp, err)
 	}
-
 	return version, resp, nil
 }
 
-type RelatedIssueCounts struct {
-	Self                                     string `json:"self"`
-	IssuesFixedCount                         int    `json:"issuesFixedCount"`
-	IssuesAffectedCount                      int    `json:"issuesAffectedCount"`
-	IssueCountWithCustomFieldsShowingVersion int    `json:"issueCountWithCustomFieldsShowingVersion"`
+// Get wraps GetWithContext using the background context.
+func (s *VersionService) Get(versionID int) (*Version, *Response, error) {
+	return s.GetWithContext(context.Background(), versionID)
 }
 
-
-func (s *VersionService) GetRelatedIssueCounts(versionID string, options *GetQueryOptions) (*RelatedIssueCounts, *Response, error) {
-	apiEndpoint := fmt.Sprintf("rest/api/latest/version/%s/relatedIssueCounts", versionID)
-	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+// CreateWithContext creates a version in JIRA.
+//
+// JIRA API docs: https://developer.atlassian.com/cloud/jira/platform/rest/#api-api-2-version-post
+func (s *VersionService) CreateWithContext(ctx context.Context, version *Version) (*Version, *Response, error) {
+	apiEndpoint := "/rest/api/2/version"
+	req, err := s.client.NewRequestWithContext(ctx, "POST", apiEndpoint, version)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if options != nil {
-		q, err := query.Values(options)
-		if err != nil {
-			return nil, nil, err
-		}
-		req.URL.RawQuery = q.Encode()
+	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		return nil, resp, err
 	}
 
-	relatedissuecounts := new(RelatedIssueCounts)
-	resp, err := s.client.Do(req, relatedissuecounts)
+	responseVersion := new(Version)
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		e := fmt.Errorf("could not read the returned data")
+		return nil, resp, NewJiraError(resp, e)
+	}
+	err = json.Unmarshal(data, responseVersion)
+	if err != nil {
+		e := fmt.Errorf("could not unmarshall the data into struct")
+		return nil, resp, NewJiraError(resp, e)
+	}
+	return responseVersion, resp, nil
+}
+
+// Create wraps CreateWithContext using the background context.
+func (s *VersionService) Create(version *Version) (*Version, *Response, error) {
+	return s.CreateWithContext(context.Background(), version)
+}
+
+// UpdateWithContext updates a version from a JSON representation.
+//
+// JIRA API docs: https://developer.atlassian.com/cloud/jira/platform/rest/#api-api-2-version-id-put
+func (s *VersionService) UpdateWithContext(ctx context.Context, version *Version) (*Version, *Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/version/%v", version.ID)
+	req, err := s.client.NewRequestWithContext(ctx, "PUT", apiEndpoint, version)
+	if err != nil {
+		return nil, nil, err
+	}
+	resp, err := s.client.Do(req, nil)
 	if err != nil {
 		jerr := NewJiraError(resp, err)
 		return nil, resp, jerr
 	}
 
-	return relatedissuecounts, resp, nil
+	// This is just to follow the rest of the API's convention of returning a version.
+	// Returning the same pointer here is pointless, so we return a copy instead.
+	ret := *version
+	return &ret, resp, nil
 }
 
-type IssuesUnresolvedCount struct {
-	Self                  string `json:"self"`
-	IssuesUnresolvedCount int    `json:"issuesUnresolvedCount"`
-}
-
-func (s *VersionService) GetIssuesUnresolvedCount(versionID string, options *GetQueryOptions) (*IssuesUnresolvedCount, *Response, error) {
-	apiEndpoint := fmt.Sprintf("rest/api/latest/version/%s/unresolvedIssueCount", versionID)
-	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if options != nil {
-		q, err := query.Values(options)
-		if err != nil {
-			return nil, nil, err
-		}
-		req.URL.RawQuery = q.Encode()
-	}
-
-	issuesunresolvedcount := new(IssuesUnresolvedCount)
-	resp, err := s.client.Do(req, issuesunresolvedcount)
-	if err != nil {
-		jerr := NewJiraError(resp, err)
-		return nil, resp, jerr
-	}
-
-	return issuesunresolvedcount, resp, nil
+// Update wraps UpdateWithContext using the background context.
+func (s *VersionService) Update(version *Version) (*Version, *Response, error) {
+	return s.UpdateWithContext(context.Background(), version)
 }
