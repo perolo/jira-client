@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/google/go-querystring/query"
 	"io/ioutil"
 )
 
@@ -110,4 +111,68 @@ func (s *VersionService) UpdateWithContext(ctx context.Context, version *Version
 // Update wraps UpdateWithContext using the background context.
 func (s *VersionService) Update(version *Version) (*Version, *Response, error) {
 	return s.UpdateWithContext(context.Background(), version)
+}
+
+
+type RelatedIssueCounts struct {
+	Self                                     string `json:"self"`
+	IssuesFixedCount                         int    `json:"issuesFixedCount"`
+	IssuesAffectedCount                      int    `json:"issuesAffectedCount"`
+	IssueCountWithCustomFieldsShowingVersion int    `json:"issueCountWithCustomFieldsShowingVersion"`
+}
+
+
+func (s *VersionService) GetRelatedIssueCounts(versionID string, options *GetQueryOptions) (*RelatedIssueCounts, *Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/latest/version/%s/relatedIssueCounts", versionID)
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if options != nil {
+		q, err := query.Values(options)
+		if err != nil {
+			return nil, nil, err
+		}
+		req.URL.RawQuery = q.Encode()
+	}
+
+	relatedissuecounts := new(RelatedIssueCounts)
+	resp, err := s.client.Do(req, relatedissuecounts)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+
+	return relatedissuecounts, resp, nil
+}
+
+type IssuesUnresolvedCount struct {
+	Self                  string `json:"self"`
+	IssuesUnresolvedCount int    `json:"issuesUnresolvedCount"`
+}
+
+func (s *VersionService) GetIssuesUnresolvedCount(versionID string, options *GetQueryOptions) (*IssuesUnresolvedCount, *Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/latest/version/%s/unresolvedIssueCount", versionID)
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if options != nil {
+		q, err := query.Values(options)
+		if err != nil {
+			return nil, nil, err
+		}
+		req.URL.RawQuery = q.Encode()
+	}
+
+	issuesunresolvedcount := new(IssuesUnresolvedCount)
+	resp, err := s.client.Do(req, issuesunresolvedcount)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+
+	return issuesunresolvedcount, resp, nil
 }

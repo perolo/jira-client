@@ -1584,3 +1584,24 @@ func (s *IssueService) AddRemoteLinkWithContext(ctx context.Context, issueID str
 func (s *IssueService) AddRemoteLink(issueID string, remotelink *RemoteLink) (*RemoteLink, *Response, error) {
 	return s.AddRemoteLinkWithContext(context.Background(), issueID, remotelink)
 }
+
+
+type TotalResult struct {
+	Totalpoints string `json:"Totalpoints"`
+}
+
+func (s *IssueService) ScriptRunnerAggregate(jql string) (*TotalResult, *Response, error) {
+	var u string
+	u = fmt.Sprintf("rest/scriptrunner-jira/latest/jqlfunctions/aggregateResult?jql=%s", url.QueryEscape(jql))
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	v := new(TotalResult)
+	resp, err := s.client.Do(req, v)
+	if err != nil {
+		err = NewJiraError(resp, err)
+	}
+	return v, resp, err
+}
