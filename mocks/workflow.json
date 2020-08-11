@@ -1,0 +1,48 @@
+[
+  {
+    "name": "jira",
+    "description": "The default Jira workflow",
+    "steps": 5,
+    "default": true
+  },
+  {
+    "name": "Standard Approval Workflow",
+    "description": "Decision workflow",
+    "lastModifiedDate": "2019-08-08 12:38",
+    "lastModifiedUser": "[Admin] Per Olofsson",
+    "steps": 4,
+    "default": false
+  },
+  {
+    "name": "Standard Default Workflow with Impeded, noverison",
+    "description": "Based on default JIRA workflow, with Impeded state",
+    "lastModifiedDate": "2018-06-28 09:50",
+    "lastModifiedUser": "[Admin] Per Olofsson",
+    "steps": 6,
+    "default": false
+  },
+  {
+    "name": "Standard Default Workflow with Impeded2",
+    "description": "Based on default JIRA workflow, with Impeded state",
+    "lastModifiedDate": "2019-08-08 11:59",
+    "lastModifiedUser": "[Admin] Per Olofsson",
+    "steps": 6,
+    "default": false
+  },
+  {
+    "name": "Standard Default Workflow with Impeded2 20190808",
+    "description": "",
+    "lastModifiedDate": "2019-08-08 11:59",
+    "lastModifiedUser": "[Admin] Per Olofsson",
+    "steps": 6,
+    "default": false
+  },
+  {
+    "name": "Standard Default Workflow with Inbox and Impeded 1.0",
+    "description": "",
+    "lastModifiedDate": "2019-07-02 14:15",
+    "lastModifiedUser": "Admin Magnus Jonsson",
+    "steps": 7,
+    "default": false
+  }
+]

@@ -274,9 +274,23 @@ type Component struct {
 }
 
 type ComponentDetail struct {
-	Self         string `json:"self"`
-	ID           string `json:"id"`
-	Name         string `json:"name"`
+	Self        string `json:"self"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	Lead        struct {
+		Self       string `json:"self"`
+		Key        string `json:"key"`
+		Name       string `json:"name"`
+		AvatarUrls struct {
+			Four8X48  string `json:"48x48"`
+			Two4X24   string `json:"24x24"`
+			One6X16   string `json:"16x16"`
+			Three2X32 string `json:"32x32"`
+		} `json:"avatarUrls"`
+		DisplayName string `json:"displayName"`
+		Active      bool   `json:"active"`
+	} `json:"lead,omitempty"`
 	AssigneeType string `json:"assigneeType"`
 	Assignee     struct {
 		Self       string `json:"self"`
@@ -290,7 +304,7 @@ type ComponentDetail struct {
 		} `json:"avatarUrls"`
 		DisplayName string `json:"displayName"`
 		Active      bool   `json:"active"`
-	} `json:"assignee"`
+	} `json:"assignee,omitempty"`
 	RealAssigneeType string `json:"realAssigneeType"`
 	RealAssignee     struct {
 		Self       string `json:"self"`
@@ -304,7 +318,7 @@ type ComponentDetail struct {
 		} `json:"avatarUrls"`
 		DisplayName string `json:"displayName"`
 		Active      bool   `json:"active"`
-	} `json:"realAssignee"`
+	} `json:"realAssignee,omitempty"`
 	IsAssigneeTypeValid bool   `json:"isAssigneeTypeValid"`
 	Project             string `json:"project"`
 	ProjectID           int    `json:"projectId"`
@@ -510,7 +524,6 @@ type GetCommentResponse struct {
 	MaxResults int       `json:"maxResults" structs:"maxResults,omitempty"`
 	Total      int       `json:"total" structs:"total,omitempty"`
 	Comments   []Comment `json:"comments" structs:"comments,omitempty"`
-
 }
 
 // FixVersion represents a software release in which an issue is fixed.
@@ -916,10 +929,10 @@ func (s *IssueService) GetComments(issue string, options *SearchOptions) ([]Comm
 	if options == nil {
 		u = fmt.Sprintf("/rest/api/2/issue/%s/comment", issue)
 	} else if options.Expand == "" {
-		u = fmt.Sprintf("/rest/api/2/issue/%s/comment", issue,
+		u = fmt.Sprintf("/rest/api/2/issue/%s/comment?startAt=%d&maxResults=%d", issue,
 			options.StartAt, options.MaxResults)
 	} else {
-		u = fmt.Sprintf("/rest/api/2/issue/%s/comment", issue,
+		u = fmt.Sprintf("/rest/api/2/issue/%s/comment?startAt=%d&maxResults=%d&expand=%s", issue,
 			options.StartAt, options.MaxResults, options.Expand)
 	}
 	//	fmt.Println("u: " + u)
@@ -1162,11 +1175,11 @@ func (s *IssueService) SearchPagesWithContext(ctx context.Context, jql string, o
 			MaxResults: 50,
 		}
 	}
-
-	if options.MaxResults == 0 {
+/*
+	if options.MaxResults == 0 {  //perolo - This is plain Wrong! - MaxResult==0 means get the total without objects!
 		options.MaxResults = 50
 	}
-
+*/
 	issues, resp, err := s.Search(jql, options)
 	if err != nil {
 		return err
@@ -1585,13 +1598,13 @@ func (s *IssueService) AddRemoteLink(issueID string, remotelink *RemoteLink) (*R
 	return s.AddRemoteLinkWithContext(context.Background(), issueID, remotelink)
 }
 
-
 type TotalResult struct {
 	Totalpoints string `json:"Totalpoints"`
 }
 
 func (s *IssueService) ScriptRunnerAggregate(jql string) (*TotalResult, *Response, error) {
 	var u string
+	jql = jql + " AND issueFunction in aggregateExpression(\"Totalpoints\", \"storyPoints.sum()\")"
 	u = fmt.Sprintf("rest/scriptrunner-jira/latest/jqlfunctions/aggregateResult?jql=%s", url.QueryEscape(jql))
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {

@@ -1,0 +1,50 @@
+[
+  {
+    "id": -2,
+    "name": "Name",
+    "type": "name",
+    "isSystem": true
+  },
+  {
+    "id": -1,
+    "name": "Key",
+    "type": "key",
+    "isSystem": true
+  },
+  {
+    "id": -3,
+    "name": "Type",
+    "type": "type",
+    "isSystem": true
+  },
+  {
+    "id": -4,
+    "name": "Url",
+    "type": "url",
+    "isSystem": true
+  },
+  {
+    "id": -5,
+    "name": "Lead",
+    "type": "lead",
+    "isSystem": true
+  },
+  {
+    "id": -6,
+    "name": "Default Assignee",
+    "type": "assignee",
+    "isSystem": true
+  },
+  {
+    "id": -7,
+    "name": "Category",
+    "type": "category",
+    "isSystem": true
+  },
+  {
+    "id": -9,
+    "name": "Description",
+    "type": "description",
+    "isSystem": true
+  }
+]

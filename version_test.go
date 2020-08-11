@@ -2,7 +2,9 @@ package jira
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strconv"
 	"testing"
 )
 
@@ -13,7 +15,7 @@ func TestVersionService_Get_Success(t *testing.T) {
 		testMethod(t, r, "GET")
 		testRequestURL(t, r, "/rest/api/2/version/10002")
 
-		fmt.Fprint(w, `{
+		_, err := fmt.Fprint(w, `{
 			"self": "http://www.example.com/jira/rest/api/2/version/10002",
 			"id": "10002",
 			"description": "An excellent version",
@@ -26,6 +28,9 @@ func TestVersionService_Get_Success(t *testing.T) {
 			"startDate" : "2010-07-01",
 			"projectId": 10000
 		}`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	version, _, err := testClient.Version.Get(10002)
@@ -45,7 +50,7 @@ func TestVersionService_Create(t *testing.T) {
 		testRequestURL(t, r, "/rest/api/2/version")
 
 		w.WriteHeader(http.StatusCreated)
-		fmt.Fprint(w, `{
+		_, err := fmt.Fprint(w, `{
 			"description": "An excellent version",
 			"name": "New Version 1",
 			"archived": false,
@@ -55,6 +60,10 @@ func TestVersionService_Create(t *testing.T) {
 			"project": "PXA",
 			"projectId": 10000
 		  }`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
+
 	})
 
 	v := &Version{
@@ -82,7 +91,7 @@ func TestServiceService_Update(t *testing.T) {
 	testMux.HandleFunc("/rest/api/2/version/10002", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "PUT")
 		testRequestURL(t, r, "/rest/api/2/version/10002")
-		fmt.Fprint(w, `{
+		_, err := fmt.Fprint(w, `{
 			"description": "An excellent updated version",
 			"name": "New Updated Version 1",
 			"archived": false,
@@ -93,6 +102,10 @@ func TestServiceService_Update(t *testing.T) {
 			"project": "PXA",
 			"projectId": 10000
 		  }`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
+
 	})
 
 	v := &Version{
@@ -109,3 +122,66 @@ func TestServiceService_Update(t *testing.T) {
 		t.Errorf("Error given: %s", err)
 	}
 }
+
+func TestServiceService_GetRelatedIssueCounts(t *testing.T) {
+	setup()
+	defer teardown()
+	testAPIEndpoint := "/rest/api/latest/version/12201/relatedIssueCounts"
+	raw, err := ioutil.ReadFile("./mocks/version.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	testMux.HandleFunc(testAPIEndpoint, func(writer http.ResponseWriter, request *http.Request) {
+		testMethod(t, request, "GET")
+		testRequestURL(t, request, testAPIEndpoint)
+		_, err = fmt.Fprint(writer, string(raw))
+		if err != nil {
+			t.Error(err.Error())
+		}
+	})
+
+	issuecount, _, err := testClient.Version.GetRelatedIssueCounts("12201", nil)
+	if issuecount == nil {
+		t.Errorf("Expected IssuesFixedCount, got nil")
+	} else {
+		if issuecount.IssuesFixedCount != 21 {
+			t.Errorf("Expected IssuesFixedCount = 21, got " + strconv.Itoa(issuecount.IssuesFixedCount))
+		}
+	}
+	if err != nil {
+		t.Errorf("Error given: %s", err.Error())
+	}
+}
+
+func TestServiceService_GetIssuesUnresolvedCount(t *testing.T) {
+	setup()
+	defer teardown()
+	testAPIEndpoint := "/rest/api/latest/version/12201/unresolvedIssueCount"
+	raw, err := ioutil.ReadFile("./mocks/version_unresolved.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	testMux.HandleFunc(testAPIEndpoint, func(writer http.ResponseWriter, request *http.Request) {
+		testMethod(t, request, "GET")
+		testRequestURL(t, request, testAPIEndpoint)
+		_, err = fmt.Fprint(writer, string(raw))
+		if err != nil {
+			t.Error(err.Error())
+		}
+	})
+
+	issuecount, _, err := testClient.Version.GetIssuesUnresolvedCount("12201", nil)
+	if issuecount == nil {
+		t.Errorf("Expected IssuesFixedCount, got nil")
+	} else {
+		if issuecount.IssuesUnresolvedCount != 15 {
+			t.Errorf("Expected IssuesUnresolvedCount = 15, got " + strconv.Itoa(issuecount.IssuesUnresolvedCount))
+		}
+	}
+	if err != nil {
+		t.Errorf("Error given: %s", err.Error())
+	}
+}
+
+
+

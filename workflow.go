@@ -13,7 +13,7 @@ type Workflow struct {
 }
 
 func (s *UserService) GetWorkflow() (*[]Workflow, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/workflow")
+	apiEndpoint := fmt.Sprintf("rest/api/2/workflow")
 	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err

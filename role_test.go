@@ -1,9 +1,11 @@
 package jira
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"testing"
 )
 
@@ -20,7 +22,10 @@ func TestRoleService_GetList_NoList(t *testing.T) {
 	testMux.HandleFunc(testAPIEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		testRequestURL(t, r, testAPIEndpoint)
-		fmt.Fprint(w, string(raw))
+		_, err = fmt.Fprint(w, string(raw))
+		if err != nil {
+			t.Error(err.Error())
+		}
 	})
 
 	roles, _, err := testClient.Role.GetList()
@@ -44,7 +49,10 @@ func TestRoleService_GetList(t *testing.T) {
 	testMux.HandleFunc(testAPIEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
 		testRequestURL(t, r, testAPIEndpoint)
-		fmt.Fprint(w, string(raw))
+		_, err = fmt.Fprint(w, string(raw))
+		if err != nil {
+			t.Error(err.Error())
+		}
 	})
 
 	roles, _, err := testClient.Role.GetList()
@@ -63,15 +71,18 @@ func TestRoleService_GetList(t *testing.T) {
 func TestRoleService_Get_NoRole(t *testing.T) {
 	setup()
 	defer teardown()
-	testAPIEdpoint := "/rest/api/3/role/99999"
+	testAPIEndpoint := "/rest/api/3/role/99999"
 	raw, err := ioutil.ReadFile("./mocks/no_role.json")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	testMux.HandleFunc(testAPIEdpoint, func(writer http.ResponseWriter, request *http.Request) {
+	testMux.HandleFunc(testAPIEndpoint, func(writer http.ResponseWriter, request *http.Request) {
 		testMethod(t, request, "GET")
-		testRequestURL(t, request, testAPIEdpoint)
-		fmt.Fprint(writer, string(raw))
+		testRequestURL(t, request, testAPIEndpoint)
+		_, err = fmt.Fprint(writer, string(raw))
+		if err != nil {
+			t.Error(err.Error())
+		}
 	})
 
 	role, _, err := testClient.Role.Get(99999)
@@ -86,15 +97,18 @@ func TestRoleService_Get_NoRole(t *testing.T) {
 func TestRoleService_Get(t *testing.T) {
 	setup()
 	defer teardown()
-	testAPIEdpoint := "/rest/api/3/role/10002"
+	testAPIEndpoint := "/rest/api/3/role/10002"
 	raw, err := ioutil.ReadFile("./mocks/role.json")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	testMux.HandleFunc(testAPIEdpoint, func(writer http.ResponseWriter, request *http.Request) {
+	testMux.HandleFunc(testAPIEndpoint, func(writer http.ResponseWriter, request *http.Request) {
 		testMethod(t, request, "GET")
-		testRequestURL(t, request, testAPIEdpoint)
-		fmt.Fprint(writer, string(raw))
+		testRequestURL(t, request, testAPIEndpoint)
+		_, err = fmt.Fprint(writer, string(raw))
+		if err != nil {
+			t.Error(err.Error())
+		}
 	})
 
 	role, _, err := testClient.Role.Get(10002)
@@ -105,3 +119,64 @@ func TestRoleService_Get(t *testing.T) {
 		t.Errorf("Error given: %s", err)
 	}
 }
+
+func TestRoleService_GetRolesForProjectWithContext(t *testing.T) {
+	setup()
+	defer teardown()
+	testAPIEndpoint := "/rest/api/latest/project/STP/role"
+	raw, err := ioutil.ReadFile("./mocks/role_all.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	testMux.HandleFunc(testAPIEndpoint, func(writer http.ResponseWriter, request *http.Request) {
+		testMethod(t, request, "GET")
+		testRequestURL(t, request, testAPIEndpoint)
+		_, err = fmt.Fprint(writer, string(raw))
+		if err != nil {
+			t.Error(err.Error())
+		}
+	})
+
+	role, _, err := testClient.Role.GetRolesForProjectWithContext(context.Background(),"STP")
+	if role == nil {
+		t.Errorf("Expected Role, got nil")
+	} else {
+		if len(*role) != 14 {
+			t.Errorf("Expected 14 Roles, got " + strconv.Itoa(len(*role)))
+		}
+	}
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
+}
+
+func TestRoleService_GetActorsForProjectRoleWithContext(t *testing.T) {
+	setup()
+	defer teardown()
+	testAPIEndpoint := "/rest/api/2/project/STP/role/10422"
+	raw, err := ioutil.ReadFile("./mocks/role_actors.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	testMux.HandleFunc(testAPIEndpoint, func(writer http.ResponseWriter, request *http.Request) {
+		testMethod(t, request, "GET")
+		testRequestURL(t, request, testAPIEndpoint)
+		_, err = fmt.Fprint(writer, string(raw))
+		if err != nil {
+			t.Error(err.Error())
+		}
+	})
+
+	actors, _, err := testClient.Role.GetActorsForProjectRoleWithContext(context.Background(),"STP", "10422")
+	if actors == nil {
+		t.Errorf("Expected Role, got nil")
+	} else {
+		if actors.Name != "Service Desk Team" {
+			t.Errorf("Expected Service Desk Team Roles, got " + actors.Name)
+		}
+	}
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
+}
+

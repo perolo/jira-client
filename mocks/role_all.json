@@ -1,0 +1,16 @@
+{
+  "Service Desk Team": "https://jira.com/rest/api/latest/project/10291/role/10422",
+  "Service Desk Customers": "https://jira.com/rest/api/latest/project/10291/role/10421",
+  "Viewer": "https://jira.com/rest/api/latest/project/10291/role/10420",
+  "Users": "https://jira.com/rest/api/latest/project/10291/role/10622",
+  "Product Manager / Product Owner": "https://jira.com/rest/api/latest/project/10291/role/10021",
+  "atlassian-addons-project-access": "https://jira.com/rest/api/latest/project/10291/role/10620",
+  "Project Lead / Scrum Master": "https://jira.com/rest/api/latest/project/10291/role/10020",
+  "Stakeholder": "https://jira.com/rest/api/latest/project/10291/role/10120",
+  "Developers": "https://jira.com/rest/api/latest/project/10291/role/10520",
+  "Administrators": "https://jira.com/rest/api/latest/project/10291/role/10423",
+  "Approver": "https://jira.com/rest/api/latest/project/10291/role/10720",
+  "Quality Assurance": "https://jira.com/rest/api/latest/project/10291/role/10623",
+  "Team Member": "https://jira.com/rest/api/latest/project/10291/role/10022",
+  "Tempo Project Managers": "https://jira.com/rest/api/latest/project/10291/role/10621"
+}

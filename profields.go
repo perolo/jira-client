@@ -20,22 +20,13 @@ type ProFieldsList []struct {
 
 type ProFieldsValue struct {
 	Field struct {
-		ID          int    `json:"id"`
-		ParentID    int    `json:"parentId"`
-		Description string `json:"description"`
-		Name        string `json:"name"`
-		Type        string `json:"type"`
-		CustomIds   bool   `json:"customIds"`
-		IsSystem    bool   `json:"isSystem"`
+		ID       int    `json:"id"`
+		Name     string `json:"name"`
+		Type     string `json:"type"`
+		IsSystem bool   `json:"isSystem"`
 	} `json:"field"`
 	Value struct {
-		Value struct {
-			ID          int    `json:"id"`
-			ParentID    int    `json:"parentId"`
-			ParentValue string `json:"parentValue"`
-			Text        string `json:"text"`
-			Value       string `json:"value"`
-		} `json:"value"`
+		Value     string `json:"value"`
 		Formatted string `json:"formatted"`
 	} `json:"value"`
 }

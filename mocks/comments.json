@@ -1,0 +1,44 @@
+{
+  "startAt": 0,
+  "maxResults": 1048576,
+  "total": 1,
+  "comments": [
+    {
+      "self": "https://jira.com/rest/api/2/issue/24831/comment/306884",
+      "id": "306884",
+      "author": {
+        "self": "https://jira.com/rest/api/2/user?username=user",
+        "name": "user",
+        "key": "user",
+        "emailAddress": "user@jira.com",
+        "avatarUrls": {
+          "48x48": "https://jira.com/secure/useravatar?ownerId=user&avatarId=14017",
+          "24x24": "https://jira.com/secure/useravatar?size=small&ownerId=user&avatarId=14017",
+          "16x16": "https://jira.com/secure/useravatar?size=xsmall&ownerId=user&avatarId=14017",
+          "32x32": "https://jira.com/secure/useravatar?size=medium&ownerId=user&avatarId=14017"
+        },
+        "displayName": "User",
+        "active": true,
+        "timeZone": "Europe/Stockholm"
+      },
+      "body": "Comment 1",
+      "updateAuthor": {
+        "self": "https://jira.com/rest/api/2/user?username=user",
+        "name": "user",
+        "key": "user",
+        "emailAddress": "user@jira.com",
+        "avatarUrls": {
+          "48x48": "https://jira.com/secure/useravatar?ownerId=user&avatarId=14017",
+          "24x24": "https://jira.com/secure/useravatar?size=small&ownerId=user&avatarId=14017",
+          "16x16": "https://jira.com/secure/useravatar?size=xsmall&ownerId=user&avatarId=14017",
+          "32x32": "https://jira.com/secure/useravatar?size=medium&ownerId=user&avatarId=14017"
+        },
+        "displayName": "User",
+        "active": true,
+        "timeZone": "Europe/Stockholm"
+      },
+      "created": "2020-08-11T12:43:49.861+0200",
+      "updated": "2020-08-11T12:43:49.861+0200"
+    }
+  ]
+}

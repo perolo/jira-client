@@ -28,3 +28,5 @@ _testmain.go
 .idea
 
 .project
+cover.out
+cover.html

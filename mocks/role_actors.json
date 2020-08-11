@@ -1,0 +1,7 @@
+{
+  "self": "https://jira.com/rest/api/2/project/10291/role/10422",
+  "name": "Service Desk Team",
+  "id": 10422,
+  "description": "This project role was created by JIRA Service Desk for managing the team. Please do not delete this role or edit its name.",
+  "actors": []
+}

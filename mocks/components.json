@@ -1,0 +1,51 @@
+[
+  {
+    "self": "https://jira.com/rest/api/2/component/11639",
+    "id": "11639",
+    "name": "Android app",
+    "assigneeType": "PROJECT_DEFAULT",
+    "assignee": {
+      "self": "https://jira.com/rest/api/2/user?username=administrator",
+      "key": "administrator",
+      "name": "administrator",
+      "avatarUrls": {
+        "48x48": "https://jira.com/secure/useravatar?ownerId=administrator&avatarId=10212",
+        "24x24": "https://jira.com/secure/useravatar?size=small&ownerId=administrator&avatarId=10212",
+        "16x16": "https://jira.com/secure/useravatar?size=xsmall&ownerId=administrator&avatarId=10212",
+        "32x32": "https://jira.com/secure/useravatar?size=medium&ownerId=administrator&avatarId=10212"
+      },
+      "displayName": "Administrator",
+      "active": true
+    },
+    "realAssigneeType": "PROJECT_DEFAULT",
+    "realAssignee": {
+      "self": "https://jira.com/rest/api/2/user?username=administrator",
+      "key": "administrator",
+      "name": "administrator",
+      "avatarUrls": {
+        "48x48": "https://jira.com/secure/useravatar?ownerId=administrator&avatarId=10212",
+        "24x24": "https://jira.com/secure/useravatar?size=small&ownerId=administrator&avatarId=10212",
+        "16x16": "https://jira.com/secure/useravatar?size=xsmall&ownerId=administrator&avatarId=10212",
+        "32x32": "https://jira.com/secure/useravatar?size=medium&ownerId=administrator&avatarId=10212"
+      },
+      "displayName": "Administrator",
+      "active": true
+    },
+    "isAssigneeTypeValid": true,
+    "project": "STP",
+    "projectId": 10291,
+    "archived": false
+  },
+  {
+    "self": "https://jira.com/rest/api/2/component/25793",
+    "id": "25793",
+    "name": "Backend",
+    "description": "Test Description",
+    "assigneeType": "UNASSIGNED",
+    "realAssigneeType": "UNASSIGNED",
+    "isAssigneeTypeValid": true,
+    "project": "STP",
+    "projectId": 10291,
+    "archived": false
+  }
+]

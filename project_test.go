@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"testing"
 )
 
@@ -158,5 +159,36 @@ func TestProjectService_GetPermissionScheme_Success(t *testing.T) {
 	}
 	if err != nil {
 		t.Errorf("Error given: %s", err)
+	}
+}
+
+
+func TestProjectService_GetComponents(t *testing.T) {
+	setup()
+	defer teardown()
+	testAPIEndpoint := "/rest/api/2/project/STP/components"
+	raw, err := ioutil.ReadFile("./mocks/components.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	testMux.HandleFunc(testAPIEndpoint, func(writer http.ResponseWriter, request *http.Request) {
+		testMethod(t, request, "GET")
+		testRequestURL(t, request, testAPIEndpoint)
+		_, err = fmt.Fprint(writer, string(raw))
+		if err != nil {
+			t.Error(err.Error())
+		}
+	})
+
+	components, _, err := testClient.Project.GetComponents("STP")
+	if components == nil {
+		t.Errorf("Expected components, got nil")
+	} else {
+		if len(*components) != 2 {
+			t.Errorf("Expected components = 2, got " + strconv.Itoa(len(*components)))
+		}
+	}
+	if err != nil {
+		t.Errorf("Error given: %s", err.Error())
 	}
 }
