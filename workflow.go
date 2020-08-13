@@ -42,3 +42,15 @@ func (s *UserService) SaveWorkflow(workflow string) (error) {
 	return err
 }
 
+func (s *UserService) SaveResponse(apiEndpoint string, file string) (error) {
+	req, err := s.client.NewRequest("GET", apiEndpoint, nil)
+	if err != nil {
+		return err
+	}
+	err = s.client.Save(req, file)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
