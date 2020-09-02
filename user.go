@@ -74,6 +74,20 @@ func (s *UserService) GetWithContext(ctx context.Context, username string) (*Use
 func (s *UserService) Get(username string) (*User, *Response, error) {
 	return s.GetWithContext(context.Background(), username)
 }
+/*
+func  (c *JIRAClient) UserSearch(username string) (*[]User, *http.Response) {
+	u := fmt.Sprintf("/rest/api/2/user/search?username=%s", username)
+
+	//payload := nil
+
+	response := new([]User)
+	_, res2  := c.doRequest("GET", u , nil, &response)
+
+	//	fmt.Println("res: " + string(res))
+
+	return response, res2
+}
+*/
 
 // GetByAccountIDWithContext gets user info from JIRA
 //
