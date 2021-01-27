@@ -59,6 +59,27 @@ type GroupSearchOptions struct {
 	IncludeInactiveUsers bool
 }
 
+type PermissionSearchOptions struct {
+	StartAt  int    `url:"startAt,omitempty"`
+	MaxResults  int    `url:"maxResults,omitempty"`
+	UserName  string `url:"username,omitempty"`
+	Permissions   string `url:"permissions,omitempty"`
+	IssueKey string `url:"issueKey,omitempty"`
+	ProjectKey string `url:"projectKey,omitempty"`
+}
+
+type PermissionSearchResultType []struct {
+	Self       string `json:"self"`
+	Name       string `json:"name"`
+	AvatarUrls struct {
+		Two4X24   string `json:"24x24"`
+		One6X16   string `json:"16x16"`
+		Three2X32 string `json:"32x32"`
+		Four8X48  string `json:"48x48"`
+	} `json:"avatarUrls"`
+	DisplayName string `json:"displayName"`
+	Active      bool   `json:"active"`
+}
 // GetWithContext returns a paginated list of users who are members of the specified group and its subgroups.
 // Users in the page are ordered by user names.
 // User of this resource is required to have sysadmin or admin permissions.
@@ -121,6 +142,25 @@ func (s *GroupService) GetWithOptionsWithContext(ctx context.Context, name strin
 // GetWithOptions wraps GetWithOptionsWithContext using the background context.
 func (s *GroupService) GetWithOptions(name string, options *GroupSearchOptions) ([]GroupMember, *Response, error) {
 	return s.GetWithOptionsWithContext(context.Background(), name, options)
+}
+
+//	/rest/api/2/user/permission/search
+
+func (s *GroupService) SearchPermissionsWithOptionsWithContext(ctx context.Context, permissiosn string, options *PermissionSearchOptions) (*PermissionSearchResultType, *Response, error) {
+	var apiEndpoint string
+	apiEndpoint, _ = addOptions("/rest/api/2/user/permission/search", options)
+
+	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	group := new(PermissionSearchResultType)
+	resp, err := s.client.Do(req, group)
+	if err != nil {
+		return nil, resp, err
+	}
+	return group, resp, nil
 }
 
 // AddWithContext adds user to group
