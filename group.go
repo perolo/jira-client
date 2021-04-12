@@ -215,3 +215,34 @@ func (s *GroupService) RemoveWithContext(ctx context.Context, groupname string, 
 func (s *GroupService) Remove(groupname string, username string) (*Response, error) {
 	return s.RemoveWithContext(context.Background(), groupname, username)
 }
+
+type GroupsResult struct {
+	Header string `json:"header"`
+	Total  int    `json:"total"`
+	Groups []struct {
+		Name   string        `json:"name"`
+		HTML   string        `json:"html"`
+		Labels []interface{} `json:"labels"`
+	} `json:"groups"`
+}
+
+// Get wraps GetWithContext using the background context.
+func (s *GroupService) GetGroups() (*GroupsResult, *Response, error) {
+	return s.GetGroupsWithContext(context.Background())
+}
+func (s *GroupService) GetGroupsWithContext(ctx context.Context) (*GroupsResult, *Response, error) {
+	///rest/api/2/groups/picker?query&exclude&maxResults
+	apiEndpoint := fmt.Sprintf("/rest/api/2/groups/picker?maxResults=10000")
+	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	groups := new(GroupsResult)
+	resp, err := s.client.Do(req, groups)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return groups, resp, nil
+}
