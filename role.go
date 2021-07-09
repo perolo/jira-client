@@ -141,3 +141,36 @@ func (s *RoleService) GetActorsForProjectRoleWithContext(ctx context.Context, pr
 	}
 	return roles, resp, err
 }
+type GroupAddType struct {
+	Group []string `json:"group"`
+}
+
+// /rest/api/2/project/{projectIdOrKey}/role/{id}
+func (s *RoleService) AddActorsForProjectRoleWithContext(ctx context.Context, proj string, roleid string, actor string) (*Role, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role/%s", proj, roleid)
+	var payload = new(GroupAddType)
+	payload.Group = append(payload.Group, actor)
+	req, err := s.client.NewRequestWithContext(ctx, "POST", apiEndpoint, payload)
+	if err != nil {
+		return nil, nil, err
+	}
+	roles := new(Role)
+	resp, err := s.client.Do(req, roles)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+	return roles, resp, err
+/*
+	var user struct {
+		Name string `json:"name"`
+	}
+	user.Name = username
+	req, err := s.client.NewRequestWithContext(ctx, "POST", apiEndpoint, &user)
+	if err != nil {
+		return nil, nil, err
+	}
+	*/
+	//groups := new(AddGroupsResponseType)
+	//c.doRequest("POST", u, payload, &groups)
+}
