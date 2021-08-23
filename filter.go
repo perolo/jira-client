@@ -14,6 +14,7 @@ type FilterService struct {
 }
 
 // Filter represents a Filter in Jira
+
 type Filter struct {
 	Self             string        `json:"self"`
 	ID               string        `json:"id"`
@@ -189,9 +190,69 @@ func (fs *FilterService) GetWithContext(ctx context.Context, filterID int) (*Fil
 	return filter, resp, err
 }
 
+type FilterPermissionType []struct {
+	ID      int    `json:"id"`
+	Type    string `json:"type"`
+	View    bool   `json:"view"`
+	Edit    bool   `json:"edit"`
+	Project struct {
+		Self       string `json:"self"`
+		ID         string `json:"id"`
+		Key        string `json:"key"`
+		Name       string `json:"name"`
+		AvatarUrls struct {
+			Four8X48  string `json:"48x48"`
+			Two4X24   string `json:"24x24"`
+			One6X16   string `json:"16x16"`
+			Three2X32 string `json:"32x32"`
+		} `json:"avatarUrls"`
+		ProjectCategory struct {
+			Self        string `json:"self"`
+			ID          string `json:"id"`
+			Name        string `json:"name"`
+			Description string `json:"description"`
+		} `json:"projectCategory"`
+	} `json:"project,omitempty"`
+	Role struct {
+		Self        string `json:"self"`
+		Name        string `json:"name"`
+		ID          int    `json:"id"`
+		Description string `json:"description"`
+		Actors      []struct {
+			ID          int    `json:"id"`
+			DisplayName string `json:"displayName"`
+			Type        string `json:"type"`
+			Name        string `json:"name"`
+		} `json:"actors"`
+	} `json:"role,omitempty"`
+	Group struct {
+		Name string `json:"name"`
+		Self string `json:"self"`
+	} `json:"group,omitempty"`
+}
+
+func (fs *FilterService) GetSharePermissionsWithContext(ctx context.Context, filterID int) (*FilterPermissionType, *Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/filter/%d/permission", filterID)
+	req, err := fs.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	filter := new(FilterPermissionType)
+	resp, err := fs.client.Do(req, filter)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+
+	return filter, resp, err
+}
+
 // Get wraps GetWithContext using the background context.
 func (fs *FilterService) Get(filterID int) (*Filter, *Response, error) {
 	return fs.GetWithContext(context.Background(), filterID)
+}
+func (fs *FilterService) GetSharePermissions(filterID int) (*FilterPermissionType, *Response, error) {
+	return fs.GetSharePermissionsWithContext(context.Background(), filterID)
 }
 
 // GetMyFiltersWithContext retrieves the my Filters.
