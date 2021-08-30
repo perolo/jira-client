@@ -74,6 +74,45 @@ func (s *UserService) GetWithContext(ctx context.Context, username string) (*Use
 func (s *UserService) Get(username string) (*User, *Response, error) {
 	return s.GetWithContext(context.Background(), username)
 }
+// Get wraps GetWithContext using the background context.
+func (s *UserService) Update( user string, data map[string]interface{}) (*UpdateResponse, *Response, error) {
+	return s.UpdateWithContext(context.Background(), user, data)
+}
+
+func (s *UserService) UpdateWithContext(ctx context.Context, user string, indata map[string]interface{} ) (*UpdateResponse, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/user?username=%s", user)
+	req, err := s.client.NewRequestWithContext(ctx, "PUT", apiEndpoint, indata)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	responseUser := new(UpdateResponse)
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		e := fmt.Errorf("could not read the returned data")
+		return nil, resp, NewJiraError(resp, e)
+	}
+	err = json.Unmarshal(data, responseUser)
+	if err != nil {
+		e := fmt.Errorf("could not unmarshall the data into struct")
+		return nil, resp, NewJiraError(resp, e)
+	}
+	return responseUser, resp, nil
+}
+
+type UpdateResponse struct {
+	Self         string `json:"self"`
+	Key          string `json:"key"`
+	Name         string `json:"name"`
+	EmailAddress string `json:"emailAddress"`
+	DisplayName  string `json:"displayName"`
+}
 /*
 func  (c *JIRAClient) UserSearch(username string) (*[]User, *http.Response) {
 	u := fmt.Sprintf("/rest/api/2/user/search?username=%s", username)
