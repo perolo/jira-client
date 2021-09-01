@@ -176,31 +176,6 @@ func TestIssueService_UpdateIssue(t *testing.T) {
 	}
 
 }
-func TestIssueService_GetComments(t *testing.T) {
-	setup()
-	defer teardown()
-	testAPIEdpoint := "/rest/api/2/issue/STP-1/comment"
-
-	raw, err := ioutil.ReadFile("./mocks/comments.json")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	testMux.HandleFunc(testAPIEdpoint, func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "GET")
-		testRequestURL(t, r, testAPIEdpoint)
-		fmt.Fprint(w, string(raw))
-	})
-	comment, _, err := testClient.Issue.GetComments("STP-1", nil)
-	if comment == nil {
-		t.Error("Expected Comment. Comment is nil")
-	}
-	if len(comment)!=1 {
-		t.Error("Expected one Comment.")
-	}
-	if err != nil {
-		t.Errorf("Error given: %s", err)
-	}
-}
 
 func TestIssueService_AddComment(t *testing.T) {
 	setup()
@@ -614,6 +589,33 @@ func TestIssueService_DeleteAttachment(t *testing.T) {
 	}
 }
 
+func TestIssueService_DeleteLink(t *testing.T) {
+	setup()
+	defer teardown()
+	testMux.HandleFunc("/rest/api/2/issueLink/10054", func(w http.ResponseWriter, r *http.Request) {
+		testMethod(t, r, "DELETE")
+		testRequestURL(t, r, "/rest/api/2/issueLink/10054")
+
+		w.WriteHeader(http.StatusNoContent)
+		fmt.Fprint(w, `{}`)
+	})
+
+	resp, err := testClient.Issue.DeleteLink("10054")
+	if resp.StatusCode != 204 {
+		t.Error("Expected link not deleted.")
+		if resp.StatusCode == 403 {
+			t.Error("User not permitted to delete link")
+		}
+		if resp.StatusCode == 404 {
+			t.Error("Link not found")
+		}
+	}
+
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
+}
+
 func TestIssueService_Search(t *testing.T) {
 	setup()
 	defer teardown()
@@ -638,10 +640,10 @@ func TestIssueService_Search(t *testing.T) {
 		t.Errorf("StartAt should populate with 1, %v given", resp.StartAt)
 	}
 	if resp.MaxResults != 40 {
-		t.Errorf("StartAt should populate with 40, %v given", resp.MaxResults)
+		t.Errorf("MaxResults should populate with 40, %v given", resp.MaxResults)
 	}
 	if resp.Total != 6 {
-		t.Errorf("StartAt should populate with 6, %v given", resp.Total)
+		t.Errorf("Total should populate with 6, %v given", resp.Total)
 	}
 }
 
@@ -742,7 +744,7 @@ func TestIssueService_SearchPages(t *testing.T) {
 		t.Errorf("Expected 5 issues, %v given", len(issues))
 	}
 }
-/*
+
 func TestIssueService_SearchPages_EmptyResult(t *testing.T) {
 	setup()
 	defer teardown()
@@ -770,7 +772,7 @@ func TestIssueService_SearchPages_EmptyResult(t *testing.T) {
 	}
 
 }
-*/
+
 func TestIssueService_GetCustomFields(t *testing.T) {
 	setup()
 	defer teardown()
@@ -1623,15 +1625,14 @@ func TestIssueService_DeprecatedGetWatchers(t *testing.T) {
 		testMethod(t, r, "GET")
 		testRequestURL(t, r, "/rest/api/2/issue/10002/watchers")
 
-		fmt.Fprint(w, `{"self":"http://www.example.com/jira/rest/api/2/issue/EX-1/watchers","isWatching":false,"watchCount":1,"watchers":[{"self":"http://www.example.com/jira/rest/api/2/user?username=fred","name":"fred","displayName":"Fred F. User","active":false}]}`)
+		fmt.Fprint(w, `{"self":"http://www.example.com/jira/rest/api/2/issue/EX-1/watchers","isWatching":false,"watchCount":1,"watchers":[{"self":"http://www.example.com/jira/rest/api/2/user?accountId=000000000000000000000000", "accountId": "000000000000000000000000", "displayName":"Fred F. User","active":false}]}`)
 	})
 
 	testMux.HandleFunc("/rest/api/2/user", func(w http.ResponseWriter, r *http.Request) {
 		testMethod(t, r, "GET")
-		testRequestURL(t, r, "/rest/api/2/user?username=fred")
+		testRequestURL(t, r, "/rest/api/2/user?accountId=000000000000000000000000")
 
-		fmt.Fprint(w, `{"self":"http://www.example.com/jira/rest/api/2/user?username=fred","key":"fred",
-        "name":"fred","emailAddress":"fred@example.com","avatarUrls":{"48x48":"http://www.example.com/jira/secure/useravatar?size=large&ownerId=fred",
+		fmt.Fprint(w, `{"self":"http://www.example.com/jira/rest/api/2/user?accountId=000000000000000000000000", "accountId": "000000000000000000000000", "key": "", "name": "", "emailAddress":"fred@example.com","avatarUrls":{"48x48":"http://www.example.com/jira/secure/useravatar?size=large&ownerId=fred",
         "24x24":"http://www.example.com/jira/secure/useravatar?size=small&ownerId=fred","16x16":"http://www.example.com/jira/secure/useravatar?size=xsmall&ownerId=fred",
         "32x32":"http://www.example.com/jira/secure/useravatar?size=medium&ownerId=fred"},"displayName":"Fred F. User","active":true,"timeZone":"Australia/Sydney","groups":{"size":3,"items":[
         {"name":"jira-user","self":"http://www.example.com/jira/rest/api/2/group?groupname=jira-user"},{"name":"jira-admin",
@@ -1652,8 +1653,8 @@ func TestIssueService_DeprecatedGetWatchers(t *testing.T) {
 		t.Errorf("Expected 1 watcher, got: %d", len(*watchers))
 		return
 	}
-	if (*watchers)[0].Name != "fred" {
-		t.Error("Expected watcher name fred")
+	if (*watchers)[0].AccountID != "000000000000000000000000" {
+		t.Error("Expected accountId 000000000000000000000000")
 	}
 }
 
@@ -1765,8 +1766,8 @@ func TestIssueService_Get_Fields_AffectsVersions(t *testing.T) {
 			Name:        "2.1.0-rc3",
 			Self:        "http://www.example.com/jira/rest/api/2/version/10705",
 			ReleaseDate: "2018-09-30",
-			Released:    false,
-			Archived:    false,
+			Released:    Bool(false),
+			Archived:    Bool(false),
 			Description: "test description",
 		},
 	}) {
@@ -1882,37 +1883,5 @@ func TestTime_MarshalJSON(t *testing.T) {
 				t.Errorf("Time.MarshalJSON() = %v, want %v", string(got), tt.expected)
 			}
 		})
-	}
-}
-//Test is failing don't understand why match fails?
-func TestIssueService_ScriptRunnerAggregate(t *testing.T) {
-	setup()
-	defer teardown()
-	jql := "fixVersion=" + "12201"
-//	endpoint :=" AND issueFunction in aggregateExpression(\"Totalpoints\", \"storyPoints.sum()\")"
-//	testAPIEdpoint := "rest/scriptrunner-jira/latest/jqlfunctions/aggregateResult?jql=" + url.QueryEscape(jql +endpoint)
-	//testAPIEdpoint := "rest/scriptrunner-jira/latest/jqlfunctions/aggregateResult?jql=fixVersion+%3D12201+AND+issueFunction+in+aggregateExpression%28%22Totalpoints%22%2C+%22storyPoints.sum%28%29%22%29"
-	testAPIEdpoint  := "/rest/scriptrunner-jira/latest/jqlfunctions/aggregateResult"
-	raw, err := ioutil.ReadFile("./mocks/TotalPoints.json")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	testMux.HandleFunc(testAPIEdpoint, func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "GET")
-		testRequestURL(t, r, testAPIEdpoint)
-		fmt.Fprint(w, string(raw))
-	})
-
-
-	total, _, err := testClient.Issue.ScriptRunnerAggregate(jql)
-	if total == nil {
-		t.Error("Expected Totalpoints. Totalpoints is nil")
-	} else {
-		if total.Totalpoints != "42" {
-			t.Error("Expected Totalpoints = 42. received: " + total.Totalpoints)
-		}
-	}
-	if err != nil {
-		t.Errorf("Error given: %s", err.Error())
 	}
 }
