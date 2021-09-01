@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	jira "github.com/andygrunwald/go-jira"
+	"github.com/trivago/tgo/tcontainer"
 	"golang.org/x/term"
 )
 
@@ -24,6 +25,12 @@ func main() {
 	bytePassword, _ := term.ReadPassword(int(syscall.Stdin))
 	password := string(bytePassword)
 
+	fmt.Print("Custom field name (i.e. customfield_10220): ")
+	customFieldName, _ := r.ReadString('\n')
+
+	fmt.Print("Custom field value: ")
+	customFieldValue, _ := r.ReadString('\n')
+
 	tp := jira.BasicAuthTransport{
 		Username: strings.TrimSpace(username),
 		Password: strings.TrimSpace(password),
@@ -32,8 +39,11 @@ func main() {
 	client, err := jira.NewClient(tp.Client(), strings.TrimSpace(jiraURL))
 	if err != nil {
 		fmt.Printf("\nerror: %v\n", err)
-		return
+		os.Exit(1)
 	}
+
+	unknowns := tcontainer.NewMarshalMap()
+	unknowns[customFieldName] = customFieldValue
 
 	i := jira.Issue{
 		Fields: &jira.IssueFields{
@@ -50,7 +60,8 @@ func main() {
 			Project: jira.Project{
 				Key: "PROJ1",
 			},
-			Summary: "Just a demo issue",
+			Summary:  "Just a demo issue",
+			Unknowns: unknowns,
 		},
 	}
 
@@ -59,5 +70,5 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("%s: %+v\n", issue.Key, issue.Fields.Summary)
+	fmt.Printf("%s: %v\n", issue.Key, issue.Self)
 }
