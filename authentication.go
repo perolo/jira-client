@@ -29,6 +29,8 @@ type AuthenticationService struct {
 
 	// Basic auth password
 	password string
+
+	usetoken bool
 }
 
 // Session represents a Session JSON response by the Jira API.
@@ -102,9 +104,10 @@ func (s *AuthenticationService) AcquireSessionCookie(username, password string) 
 // SetBasicAuth sets username and password for the basic auth against the Jira instance.
 //
 // Deprecated: Use BasicAuthTransport instead
-func (s *AuthenticationService) SetBasicAuth(username, password string) {
+func (s *AuthenticationService) SetBasicAuth(username, password string, usetoken bool) {
 	s.username = username
 	s.password = password
+	s.usetoken = usetoken
 	s.authType = authTypeBasic
 }
 

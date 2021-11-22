@@ -143,8 +143,12 @@ func (c *Client) NewRawRequestWithContext(ctx context.Context, method, urlStr st
 		}
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
-		if c.Authentication.username != "" {
-			req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
+		if c.Authentication.usetoken {
+			SetTokenAuth(req,c.Authentication.password)
+		} else {
+			if c.Authentication.username != "" {
+				req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
+			}
 		}
 	}
 
@@ -195,8 +199,12 @@ func (c *Client) NewRequestWithContext(ctx context.Context, method, urlStr strin
 		}
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
-		if c.Authentication.username != "" {
-			req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
+		if c.Authentication.usetoken {
+			SetTokenAuth(req,c.Authentication.password)
+		} else {
+			if c.Authentication.username != "" {
+				req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
+			}
 		}
 	}
 
@@ -261,8 +269,12 @@ func (c *Client) NewMultiPartRequestWithContext(ctx context.Context, method, url
 		}
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
-		if c.Authentication.username != "" {
-			req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
+		if c.Authentication.usetoken {
+			SetTokenAuth(req,c.Authentication.password)
+		} else {
+			if c.Authentication.username != "" {
+				req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
+			}
 		}
 	}
 
@@ -405,10 +417,15 @@ func (r *Response) populatePageValues(v interface{}) {
 type BasicAuthTransport struct {
 	Username string
 	Password string
+	UseToken bool
 
 	// Transport is the underlying HTTP transport to use when making requests.
 	// It will default to http.DefaultTransport if nil.
 	Transport http.RoundTripper
+}
+
+func SetTokenAuth(r *http.Request, password string) {
+	r.Header.Set("Authorization", "Bearer "+password)
 }
 
 // RoundTrip implements the RoundTripper interface.  We just add the
@@ -416,7 +433,11 @@ type BasicAuthTransport struct {
 func (t *BasicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req2 := cloneRequest(req) // per RoundTripper contract
 
-	req2.SetBasicAuth(t.Username, t.Password)
+	if t.UseToken {
+		SetTokenAuth(req2,t.Password)
+	} else {
+		req2.SetBasicAuth(t.Username, t.Password)
+	}
 	return t.transport().RoundTrip(req2)
 }
 
