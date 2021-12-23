@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -60,6 +61,8 @@ type Client struct {
 	IssueLinkType    *IssueLinkTypeService
 	Organization     *OrganizationService
 	ServiceDesk      *ServiceDeskService
+
+	Debug    bool
 }
 
 // NewClient returns a new Jira API client.
@@ -144,12 +147,16 @@ func (c *Client) NewRawRequestWithContext(ctx context.Context, method, urlStr st
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
 		if c.Authentication.usetoken {
-			SetTokenAuth(req,c.Authentication.password)
+			panic(err)
 		} else {
 			if c.Authentication.username != "" {
 				req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
 			}
 		}
+	} else if c.Authentication.authType == authTypeToken {
+		SetTokenAuth(req,c.Authentication.password)
+	} else {
+		panic(nil)
 	}
 
 	return req, nil
@@ -159,6 +166,32 @@ func (c *Client) NewRawRequestWithContext(ctx context.Context, method, urlStr st
 func (c *Client) NewRawRequest(method, urlStr string, body io.Reader) (*http.Request, error) {
 	return c.NewRawRequestWithContext(context.Background(), method, urlStr, body)
 }
+func formatRequest(r *http.Request) string {
+	// Create return string
+	var request []string
+	// Add the request string
+	url := fmt.Sprintf("%v %v %v", r.Method, r.URL, r.Proto)
+	request = append(request, url)
+	// Add the host
+	request = append(request, fmt.Sprintf("Host: %v", r.Host))
+	// Loop through headers
+	for name, headers := range r.Header {
+		name = strings.ToLower(name)
+		for _, h := range headers {
+			request = append(request, fmt.Sprintf("%v: %v", name, h))
+		}
+	}
+
+	// If this is a POST, add post data
+	if r.Method == "POST" {
+		r.ParseForm()
+		request = append(request, "\n")
+		request = append(request, r.Form.Encode())
+	}
+	// Return the request as a string
+	return strings.Join(request, "\n")
+}
+
 
 // NewRequestWithContext creates an API request.
 // A relative URL can be provided in urlStr, in which case it is resolved relative to the baseURL of the Client.
@@ -200,13 +233,21 @@ func (c *Client) NewRequestWithContext(ctx context.Context, method, urlStr strin
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
 		if c.Authentication.usetoken {
-			SetTokenAuth(req,c.Authentication.password)
+			panic(err)
 		} else {
 			if c.Authentication.username != "" {
 				req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
 			}
 		}
+	} else if c.Authentication.authType == authTypeToken {
+		SetTokenAuth(req,c.Authentication.password)
+	} else {
+		panic(nil)
 	}
+	if c.Debug {
+		log.Printf("Sending request to services: \n %s", formatRequest(req))
+	}
+
 
 	return req, nil
 }
@@ -270,12 +311,16 @@ func (c *Client) NewMultiPartRequestWithContext(ctx context.Context, method, url
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
 		if c.Authentication.usetoken {
-			SetTokenAuth(req,c.Authentication.password)
+			panic(err)
 		} else {
 			if c.Authentication.username != "" {
 				req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
 			}
 		}
+	} else if c.Authentication.authType == authTypeToken {
+		SetTokenAuth(req,c.Authentication.password)
+	} else {
+		panic(nil)
 	}
 
 	return req, nil

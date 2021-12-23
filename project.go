@@ -178,6 +178,42 @@ func (s *ProjectService) GetPermissionSchemeWithContext(ctx context.Context, pro
 	return ps, resp, nil
 }
 
+type ProjectPermissionsType struct {
+	Expand      string `json:"expand"`
+	ID          int    `json:"id"`
+	Self        string `json:"self"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Permissions []struct {
+		ID     int    `json:"id"`
+		Self   string `json:"self"`
+		Holder struct {
+			Type      string `json:"type"`
+			Parameter string `json:"parameter"`
+			Expand    string `json:"expand"`
+		} `json:"holder,omitempty"`
+		Permission string `json:"permission"`
+	} `json:"permissions"`
+}
+
+func (s *ProjectService) GetProjectPermissions(projectID string) (*ProjectPermissionsType, *Response, error) {
+	ctx := context.Background()
+	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/permissionscheme?expand=permissions", projectID)
+	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	ps := new(ProjectPermissionsType)
+	resp, err := s.client.Do(req, ps)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+
+	return ps, resp, nil
+}
+
 // GetPermissionScheme wraps GetPermissionSchemeWithContext using the background context.
 func (s *ProjectService) GetPermissionScheme(projectID string) (*PermissionScheme, *Response, error) {
 	return s.GetPermissionSchemeWithContext(context.Background(), projectID)
@@ -199,4 +235,3 @@ func (s *ProjectService) GetComponents(projectID string) (*[]ComponentDetail, *R
 
 	return comps, resp, nil
 }
-

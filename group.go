@@ -60,12 +60,12 @@ type GroupSearchOptions struct {
 }
 
 type PermissionSearchOptions struct {
-	StartAt  int    `url:"startAt,omitempty"`
+	StartAt     int    `url:"startAt,omitempty"`
 	MaxResults  int    `url:"maxResults,omitempty"`
-	UserName  string `url:"username,omitempty"`
-	Permissions   string `url:"permissions,omitempty"`
-	IssueKey string `url:"issueKey,omitempty"`
-	ProjectKey string `url:"projectKey,omitempty"`
+	UserName    string `url:"username,omitempty"`
+	Permissions string `url:"permissions,omitempty"`
+	IssueKey    string `url:"issueKey,omitempty"`
+	ProjectKey  string `url:"projectKey,omitempty"`
 }
 
 type PermissionSearchResultType []struct {
@@ -80,6 +80,7 @@ type PermissionSearchResultType []struct {
 	DisplayName string `json:"displayName"`
 	Active      bool   `json:"active"`
 }
+
 // GetWithContext returns a paginated list of users who are members of the specified group and its subgroups.
 // Users in the page are ordered by user names.
 // User of this resource is required to have sysadmin or admin permissions.
@@ -239,6 +240,51 @@ func (s *GroupService) GetGroupsWithContext(ctx context.Context) (*GroupsResult,
 	}
 
 	groups := new(GroupsResult)
+	resp, err := s.client.Do(req, groups)
+	if err != nil {
+		return nil, resp, err
+	}
+
+	return groups, resp, nil
+}
+
+type AddGroupsResult struct {
+	Name  string `json:"name"`
+	Self  string `json:"self"`
+	Users struct {
+		Size  int `json:"size"`
+		Items []struct {
+			Self        string `json:"self"`
+			Name        string `json:"name"`
+			DisplayName string `json:"displayName"`
+			Active      bool   `json:"active"`
+		} `json:"items"`
+		MaxResults int `json:"max-results"`
+		StartIndex int `json:"start-index"`
+		EndIndex   int `json:"end-index"`
+	} `json:"users"`
+	Expand string `json:"expand"`
+}
+
+// Get wraps GetWithContext using the background context.
+func (s *GroupService) AddGroup(name string) (*AddGroupsResult, *Response, error) {
+	return s.AddGroupsWithContext(context.Background(), name)
+}
+func (s *GroupService) AddGroupsWithContext(ctx context.Context, name string) (*AddGroupsResult, *Response, error) {
+	///rest/api/2/groups/picker?query&exclude&maxResults
+	apiEndpoint := fmt.Sprintf("/rest/api/2/group")
+
+	var group struct {
+		Name string `json:"name"`
+	}
+	group.Name = name
+
+	req, err := s.client.NewRequestWithContext(ctx, "POST", apiEndpoint, &group)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	groups := new(AddGroupsResult) //TODO - The type not correct? Documentation strange
 	resp, err := s.client.Do(req, groups)
 	if err != nil {
 		return nil, resp, err

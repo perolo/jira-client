@@ -13,6 +13,8 @@ const (
 	authTypeBasic = 1
 	// HTTP Session Authentication
 	authTypeSession = 2
+	// HTTP Session Authentication
+	authTypeToken = 3
 )
 
 // AuthenticationService handles authentication for the Jira instance / API.
@@ -103,13 +105,19 @@ func (s *AuthenticationService) AcquireSessionCookie(username, password string) 
 
 // SetBasicAuth sets username and password for the basic auth against the Jira instance.
 //
-// Deprecated: Use BasicAuthTransport instead
+// Reactivating to manage token login
 func (s *AuthenticationService) SetBasicAuth(username, password string, usetoken bool) {
 	s.username = username
 	s.password = password
 	s.usetoken = usetoken
 	s.authType = authTypeBasic
 }
+func (s *AuthenticationService) SetTokenAuth(password string, usetoken bool) {
+	s.password = password
+	s.usetoken = usetoken
+	s.authType = authTypeToken
+}
+
 
 // Authenticated reports if the current Client has authentication details for Jira
 func (s *AuthenticationService) Authenticated() bool {
@@ -118,6 +126,8 @@ func (s *AuthenticationService) Authenticated() bool {
 			return s.client.session != nil
 		} else if s.authType == authTypeBasic {
 			return s.username != ""
+		} else if s.authType == authTypeToken {
+			return s.password != ""
 		}
 
 	}

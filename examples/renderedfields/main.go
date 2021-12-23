@@ -38,6 +38,7 @@ func main() {
 		ba := jira.BasicAuthTransport{
 			Username: strings.TrimSpace(username),
 			Password: strings.TrimSpace(password),
+			UseToken: cfg.UseToken,
 		}
 		tp = ba.Client()
 	}

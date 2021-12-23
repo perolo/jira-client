@@ -89,9 +89,9 @@ func (s *RoleService) Get(roleID int) (*Role, *Response, error) {
 }
 
 type RoleType struct {
-	Name string
+	Name   string
 	Rollnk string
-	ID string
+	ID     string
 }
 
 // GetListWithContext returns a list of all available roles for a project
@@ -114,13 +114,13 @@ func (s *RoleService) GetRolesForProjectWithContext(ctx context.Context, proj st
 		return nil, nil, nil
 	}
 	// Should be a better way of doing this:
-	for k,v := range doc.(map[string]interface{}) {
+	for k, v := range doc.(map[string]interface{}) {
 		var r RoleType
 		r.Name = k
 		r.Rollnk = v.(string)
 		pos := strings.LastIndex(r.Rollnk, "/role/")
 		adjustedPos := pos + len("/role/")
-		r.ID =  r.Rollnk[adjustedPos:len(r.Rollnk)]
+		r.ID = r.Rollnk[adjustedPos:len(r.Rollnk)]
 		rl = append(rl, r)
 	}
 	return &rl, nil, err
@@ -141,6 +141,7 @@ func (s *RoleService) GetActorsForProjectRoleWithContext(ctx context.Context, pr
 	}
 	return roles, resp, err
 }
+
 type GroupAddType struct {
 	Group []string `json:"group"`
 }
@@ -161,16 +162,37 @@ func (s *RoleService) AddActorsForProjectRoleWithContext(ctx context.Context, pr
 		return nil, resp, jerr
 	}
 	return roles, resp, err
-/*
-	var user struct {
-		Name string `json:"name"`
-	}
-	user.Name = username
-	req, err := s.client.NewRequestWithContext(ctx, "POST", apiEndpoint, &user)
-	if err != nil {
-		return nil, nil, err
-	}
+	/*
+		var user struct {
+			Name string `json:"name"`
+		}
+		user.Name = username
+		req, err := s.client.NewRequestWithContext(ctx, "POST", apiEndpoint, &user)
+		if err != nil {
+			return nil, nil, err
+		}
 	*/
 	//groups := new(AddGroupsResponseType)
 	//c.doRequest("POST", u, payload, &groups)
+}
+
+type GroupRemoveType struct {
+	User []string `json:"user"`
+}
+
+// DELETE /rest/project/{projectIdOrKey}/role/{id}
+func (s *RoleService) RemoveUserActorsForProjectRole(proj string, roleid int, user string) (*Role, *Response, error) {
+	ctx := context.Background()
+	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role/%v?user=%s", proj, roleid, user)
+	req, err := s.client.NewRequestWithContext(ctx, "DELETE", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	resp, err := s.client.Do(req, nil)
+	if err != nil {
+		jerr := NewJiraError(resp, err)
+		return nil, resp, jerr
+	}
+	return nil, resp, err
 }

@@ -27,6 +27,7 @@ func main() {
 	tp := jira.BasicAuthTransport{
 		Username: strings.TrimSpace(username),
 		Password: strings.TrimSpace(password),
+		UseToken: cfg.UseToken,
 	}
 
 	client, err := jira.NewClient(tp.Client(), strings.TrimSpace(jiraURL))
