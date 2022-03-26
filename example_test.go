@@ -4,13 +4,24 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"strings"
 
 	//jira "github.com/andygrunwald/go-jira"
 	jira "github.com/perolo/jira-client"
 )
 
 func ExampleNewClient() {
+	/*
+		tp := jira.BasicAuthTransport{
+			Username: strings.TrimSpace("username"),
+			Password: strings.TrimSpace("password"),
+			UseToken: false,
+		}
+	*/
+	//	testClient, _ = NewClient(tp.Client(), strings.TrimSpace(testServer.URL))
+
 	jiraClient, _ := jira.NewClient(nil, "https://issues.apache.org/jira/")
+	jiraClient.Authentication.SetAuthNo()
 	issue, _, _ := jiraClient.Issue.Get("MESOS-3325", nil)
 
 	fmt.Printf("%s: %+v\n", issue.Key, issue.Fields.Summary)
@@ -47,27 +58,7 @@ func ExampleAuthenticationService_SetBasicAuth() {
 	if err != nil {
 		panic(err)
 	}
-	jiraClient.Authentication.SetBasicAuth("username", "password")
-
-	issue, _, err := jiraClient.Issue.Get("SYS-5156", nil)
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Printf("%s: %+v\n", issue.Key, issue.Fields.Summary)
-}
-
-func ExampleAuthenticationService_AcquireSessionCookie() {
-	jiraClient, err := jira.NewClient(nil, "https://your.jira-instance.com/")
-	if err != nil {
-		panic(err)
-	}
-
-	res, err := jiraClient.Authentication.AcquireSessionCookie("username", "password")
-	if err != nil || res == false {
-		fmt.Printf("Result: %v\n", res)
-		panic(err)
-	}
+	jiraClient.Authentication.SetBasicAuth("username", "password", jiraClient.Authentication.Usetoken)
 
 	issue, _, err := jiraClient.Issue.Get("SYS-5156", nil)
 	if err != nil {
@@ -78,17 +69,24 @@ func ExampleAuthenticationService_AcquireSessionCookie() {
 }
 
 func ExampleIssueService_Create() {
-	jiraClient, err := jira.NewClient(nil, "https://your.jira-instance.com/")
+
+	tp := jira.BasicAuthTransport{
+		Username: strings.TrimSpace("username"),
+		Password: strings.TrimSpace("password"),
+		UseToken: false,
+	}
+
+	jiraClient, err := jira.NewClient(tp.Client(), "https://your.jira-instance.com/")
 	if err != nil {
 		panic(err)
 	}
-
-	res, err := jiraClient.Authentication.AcquireSessionCookie("username", "password")
-	if err != nil || res == false {
-		fmt.Printf("Result: %v\n", res)
-		panic(err)
-	}
-
+	/*
+		res, err := jiraClient.Authentication.AcquireSessionCookie("username", "password")
+		if err != nil || res == false {
+			fmt.Printf("Result: %v\n", res)
+			panic(err)
+		}
+	*/
 	i := jira.Issue{
 		Fields: &jira.IssueFields{
 			Assignee: &jira.User{

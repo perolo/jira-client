@@ -13,8 +13,10 @@ const (
 	authTypeBasic = 1
 	// HTTP Session Authentication
 	authTypeSession = 2
-	// HTTP Session Authentication
+	// HTTP Token Authentication
 	authTypeToken = 3
+	// No auth
+	authTypeNo = 4
 )
 
 // AuthenticationService handles authentication for the Jira instance / API.
@@ -32,7 +34,7 @@ type AuthenticationService struct {
 	// Basic auth password
 	password string
 
-	usetoken bool
+	Usetoken bool
 }
 
 // Session represents a Session JSON response by the Jira API.
@@ -52,72 +54,23 @@ type Session struct {
 	Cookies []*http.Cookie
 }
 
-// AcquireSessionCookieWithContext creates a new session for a user in Jira.
-// Once a session has been successfully created it can be used to access any of Jira's remote APIs and also the web UI by passing the appropriate HTTP Cookie header.
-// The header will by automatically applied to every API request.
-// Note that it is generally preferrable to use HTTP BASIC authentication with the REST API.
-// However, this resource may be used to mimic the behaviour of Jira's log-in page (e.g. to display log-in errors to a user).
-//
-// Jira API docs: https://docs.atlassian.com/jira/REST/latest/#auth/1/session
-//
-// Deprecated: Use CookieAuthTransport instead
-func (s *AuthenticationService) AcquireSessionCookieWithContext(ctx context.Context, username, password string) (bool, error) {
-	apiEndpoint := "rest/auth/1/session"
-	body := struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}{
-		username,
-		password,
-	}
-
-	req, err := s.client.NewRequestWithContext(ctx, "POST", apiEndpoint, body)
-	if err != nil {
-		return false, err
-	}
-
-	session := new(Session)
-	resp, err := s.client.Do(req, session)
-
-	if resp != nil {
-		session.Cookies = resp.Cookies()
-	}
-
-	if err != nil {
-		return false, fmt.Errorf("auth at Jira instance failed (HTTP(S) request). %s", err)
-	}
-	if resp != nil && resp.StatusCode != 200 {
-		return false, fmt.Errorf("auth at Jira instance failed (HTTP(S) request). Status code: %d", resp.StatusCode)
-	}
-
-	s.client.session = session
-	s.authType = authTypeSession
-
-	return true, nil
-}
-
-// AcquireSessionCookie wraps AcquireSessionCookieWithContext using the background context.
-//
-// Deprecated: Use CookieAuthTransport instead
-func (s *AuthenticationService) AcquireSessionCookie(username, password string) (bool, error) {
-	return s.AcquireSessionCookieWithContext(context.Background(), username, password)
-}
-
 // SetBasicAuth sets username and password for the basic auth against the Jira instance.
 //
 // Reactivating to manage token login
 func (s *AuthenticationService) SetBasicAuth(username, password string, usetoken bool) {
 	s.username = username
 	s.password = password
-	s.usetoken = usetoken
+	s.Usetoken = usetoken
 	s.authType = authTypeBasic
 }
 func (s *AuthenticationService) SetTokenAuth(password string, usetoken bool) {
 	s.password = password
-	s.usetoken = usetoken
+	s.Usetoken = usetoken
 	s.authType = authTypeToken
 }
-
+func (s *AuthenticationService) SetAuthNo() {
+	s.authType = authTypeNo
+}
 
 // Authenticated reports if the current Client has authentication details for Jira
 func (s *AuthenticationService) Authenticated() bool {

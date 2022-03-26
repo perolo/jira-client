@@ -40,15 +40,15 @@ type Client struct {
 	session *Session
 
 	// Services used for talking to different parts of the JIRA API.
-	Authentication *AuthenticationService
-	Issue          *IssueService
-	Project        *ProjectService
-	Board          *BoardService
-	Sprint         *SprintService
-	User           *UserService
-	Group          *GroupService
-	ProField	   *ProfieldService
-	Version        *VersionService
+	Authentication   *AuthenticationService
+	Issue            *IssueService
+	Project          *ProjectService
+	Board            *BoardService
+	Sprint           *SprintService
+	User             *UserService
+	Group            *GroupService
+	ProField         *ProfieldService
+	Version          *VersionService
 	Priority         *PriorityService
 	Field            *FieldService
 	Component        *ComponentService
@@ -62,7 +62,7 @@ type Client struct {
 	Organization     *OrganizationService
 	ServiceDesk      *ServiceDeskService
 
-	Debug    bool
+	Debug bool
 }
 
 // NewClient returns a new Jira API client.
@@ -146,7 +146,7 @@ func (c *Client) NewRawRequestWithContext(ctx context.Context, method, urlStr st
 		}
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
-		if c.Authentication.usetoken {
+		if c.Authentication.Usetoken {
 			panic(err)
 		} else {
 			if c.Authentication.username != "" {
@@ -154,7 +154,7 @@ func (c *Client) NewRawRequestWithContext(ctx context.Context, method, urlStr st
 			}
 		}
 	} else if c.Authentication.authType == authTypeToken {
-		SetTokenAuth(req,c.Authentication.password)
+		SetTokenAuth(req, c.Authentication.password)
 	} else {
 		panic(nil)
 	}
@@ -191,7 +191,6 @@ func formatRequest(r *http.Request) string {
 	// Return the request as a string
 	return strings.Join(request, "\n")
 }
-
 
 // NewRequestWithContext creates an API request.
 // A relative URL can be provided in urlStr, in which case it is resolved relative to the baseURL of the Client.
@@ -232,7 +231,7 @@ func (c *Client) NewRequestWithContext(ctx context.Context, method, urlStr strin
 		}
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
-		if c.Authentication.usetoken {
+		if c.Authentication.Usetoken {
 			panic(err)
 		} else {
 			if c.Authentication.username != "" {
@@ -240,14 +239,16 @@ func (c *Client) NewRequestWithContext(ctx context.Context, method, urlStr strin
 			}
 		}
 	} else if c.Authentication.authType == authTypeToken {
-		SetTokenAuth(req,c.Authentication.password)
+		SetTokenAuth(req, c.Authentication.password)
+	} else if c.Authentication.authType == authTypeNo {
+		// Do nothing
+		//fmt.Println("noauth")
 	} else {
 		panic(nil)
 	}
 	if c.Debug {
 		log.Printf("Sending request to services: \n %s", formatRequest(req))
 	}
-
 
 	return req, nil
 }
@@ -310,7 +311,7 @@ func (c *Client) NewMultiPartRequestWithContext(ctx context.Context, method, url
 		}
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
-		if c.Authentication.usetoken {
+		if c.Authentication.Usetoken {
 			panic(err)
 		} else {
 			if c.Authentication.username != "" {
@@ -318,7 +319,7 @@ func (c *Client) NewMultiPartRequestWithContext(ctx context.Context, method, url
 			}
 		}
 	} else if c.Authentication.authType == authTypeToken {
-		SetTokenAuth(req,c.Authentication.password)
+		SetTokenAuth(req, c.Authentication.password)
 	} else {
 		panic(nil)
 	}
@@ -350,10 +351,10 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 	if v != nil {
 		// Open a NewDecoder and defer closing the reader only if there is a provided interface to decode to
 		defer httpResp.Body.Close()
-/*		if Debug {
-			body, _ := ioutil.ReadAll(httpResp.Body)
-			fmt.Printf("resp: %v\n", string(body))
-		}*/
+		/*		if Debug {
+				body, _ := ioutil.ReadAll(httpResp.Body)
+				fmt.Printf("resp: %v\n", string(body))
+			}*/
 		err = json.NewDecoder(httpResp.Body).Decode(v)
 	}
 
@@ -378,8 +379,8 @@ func (c *Client) Do2(req *http.Request) ([]byte, error) {
 
 	defer httpResp.Body.Close()
 	body, _ = ioutil.ReadAll(httpResp.Body)
-//	fmt.Printf("resp: %v\n", string(body))
-//	resp := newResponse(httpResp, v)
+	//	fmt.Printf("resp: %v\n", string(body))
+	//	resp := newResponse(httpResp, v)
 	return body, err
 }
 
@@ -479,7 +480,7 @@ func (t *BasicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error
 	req2 := cloneRequest(req) // per RoundTripper contract
 
 	if t.UseToken {
-		SetTokenAuth(req2,t.Password)
+		SetTokenAuth(req2, t.Password)
 	} else {
 		req2.SetBasicAuth(t.Username, t.Password)
 	}
