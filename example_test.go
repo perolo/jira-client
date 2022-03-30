@@ -3,11 +3,9 @@ package jira_test
 import (
 	"crypto/tls"
 	"fmt"
+	jira "github.com/perolo/jira-client"
 	"net/http"
 	"strings"
-
-	//jira "github.com/andygrunwald/go-jira"
-	jira "github.com/perolo/jira-client"
 )
 
 func ExampleNewClient() {
@@ -21,7 +19,7 @@ func ExampleNewClient() {
 	//	testClient, _ = NewClient(tp.Client(), strings.TrimSpace(testServer.URL))
 
 	jiraClient, _ := jira.NewClient(nil, "https://issues.apache.org/jira/")
-	jiraClient.Authentication.SetAuthNo()
+	//	jiraClient.Authentication.SetAuthNo()
 	issue, _, _ := jiraClient.Issue.Get("MESOS-3325", nil)
 
 	fmt.Printf("%s: %+v\n", issue.Key, issue.Fields.Summary)
@@ -58,7 +56,7 @@ func ExampleAuthenticationService_SetBasicAuth() {
 	if err != nil {
 		panic(err)
 	}
-	jiraClient.Authentication.SetBasicAuth("username", "password", jiraClient.Authentication.Usetoken)
+	jiraClient.Authentication.SetBasicAuth("username", "password")
 
 	issue, _, err := jiraClient.Issue.Get("SYS-5156", nil)
 	if err != nil {
@@ -73,7 +71,6 @@ func ExampleIssueService_Create() {
 	tp := jira.BasicAuthTransport{
 		Username: strings.TrimSpace("username"),
 		Password: strings.TrimSpace("password"),
-		UseToken: false,
 	}
 
 	jiraClient, err := jira.NewClient(tp.Client(), "https://your.jira-instance.com/")

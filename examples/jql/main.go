@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	jira "github.com/andygrunwald/go-jira"
+	jira "github.com/perolo/jira-client"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	outputResponse(issues, resp)
+	outputResponse(issues.Issues, resp)
 
 	fmt.Println("")
 	fmt.Println("")
@@ -29,7 +29,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	outputResponse(issues, resp)
+	outputResponse(issues.Issues, resp)
 }
 
 func outputResponse(issues []jira.Issue, resp *jira.Response) {

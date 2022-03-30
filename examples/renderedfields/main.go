@@ -9,7 +9,7 @@ import (
 	"strings"
 	"syscall"
 
-	jira "github.com/andygrunwald/go-jira"
+	jira "github.com/perolo/jira-client"
 )
 
 func main() {
@@ -38,7 +38,6 @@ func main() {
 		ba := jira.BasicAuthTransport{
 			Username: strings.TrimSpace(username),
 			Password: strings.TrimSpace(password),
-			UseToken: cfg.UseToken,
 		}
 		tp = ba.Client()
 	}

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"syscall"
 
-	jira "github.com/andygrunwald/go-jira"
+	jira "github.com/perolo/jira-client"
 	"github.com/trivago/tgo/tcontainer"
 	"golang.org/x/term"
 )
@@ -34,18 +34,12 @@ func main() {
 	tp := jira.BasicAuthTransport{
 		Username: strings.TrimSpace(username),
 		Password: strings.TrimSpace(password),
-		UseToken: cfg.UseToken,
 	}
 
 	client, err := jira.NewClient(tp.Client(), strings.TrimSpace(jiraURL))
 	if err != nil {
 		fmt.Printf("\nerror: %v\n", err)
 		os.Exit(1)
-	}
-	if cfg.UseToken {
-		jiraClient.Authentication.SetTokenAuth(cfg.JiraToken, cfg.UseToken)
-	} else {
-		jiraClient.Authentication.SetBasicAuth(cfg.JiraUser, cfg.JiraPass, cfg.UseToken)
 	}
 
 	unknowns := tcontainer.NewMarshalMap()

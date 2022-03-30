@@ -7,20 +7,18 @@ import (
 	"io/ioutil"
 )
 
-// UserService handles users for the JIRA instance / API.
+// UserService handles users for the Jira instance / API.
 //
-// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user
+// Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-group-Users
 type UserService struct {
 	client *Client
 }
 
-// User represents a JIRA user.
+// User represents a Jira user.
 type User struct {
-	Self        string `json:"self,omitempty" structs:"self,omitempty"`
-	AccountID   string `json:"accountId,omitempty" structs:"accountId,omitempty"`
-	AccountType string `json:"accountType,omitempty" structs:"accountType,omitempty"`
-	// TODO: name & key are deprecated, see:
-	// https://developer.atlassian.com/cloud/jira/platform/api-changes-for-user-privacy-announcement/
+	Self            string     `json:"self,omitempty" structs:"self,omitempty"`
+	AccountID       string     `json:"accountId,omitempty" structs:"accountId,omitempty"`
+	AccountType     string     `json:"accountType,omitempty" structs:"accountType,omitempty"`
 	Name            string     `json:"name,omitempty" structs:"name,omitempty"`
 	Key             string     `json:"key,omitempty" structs:"key,omitempty"`
 	Password        string     `json:"-"`
@@ -48,15 +46,11 @@ type userSearch []userSearchParam
 
 type userSearchF func(userSearch) userSearch
 
-// GetWithContext gets user info from JIRA
+// GetWithContext gets user info from Jira using its Account Id
 //
-// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUser
-//
-// /!\ Deprecation notice: https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/
-// By 29 April 2019, we will remove personal data from the API that is used to identify users,
-// such as username and userKey, and instead use the Atlassian account ID (accountId).
-func (s *UserService) GetWithContext(ctx context.Context, username string) (*User, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/user?username=%s", username)
+// Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-rest-api-2-user-get
+func (s *UserService) GetWithContext(ctx context.Context, accountId string) (*User, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/user?accountId=%s", accountId)
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
@@ -71,66 +65,14 @@ func (s *UserService) GetWithContext(ctx context.Context, username string) (*Use
 }
 
 // Get wraps GetWithContext using the background context.
-func (s *UserService) Get(username string) (*User, *Response, error) {
-	return s.GetWithContext(context.Background(), username)
-}
-// Get wraps GetWithContext using the background context.
-func (s *UserService) Update( user string, data map[string]interface{}) (*UpdateResponse, *Response, error) {
-	return s.UpdateWithContext(context.Background(), user, data)
+func (s *UserService) Get(accountId string) (*User, *Response, error) {
+	return s.GetWithContext(context.Background(), accountId)
 }
 
-func (s *UserService) UpdateWithContext(ctx context.Context, user string, indata map[string]interface{} ) (*UpdateResponse, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/user?username=%s", user)
-	req, err := s.client.NewRequestWithContext(ctx, "PUT", apiEndpoint, indata)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	resp, err := s.client.Do(req, nil)
-	if err != nil {
-		return nil, resp, err
-	}
-
-	responseUser := new(UpdateResponse)
-	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		e := fmt.Errorf("could not read the returned data")
-		return nil, resp, NewJiraError(resp, e)
-	}
-	err = json.Unmarshal(data, responseUser)
-	if err != nil {
-		e := fmt.Errorf("could not unmarshall the data into struct")
-		return nil, resp, NewJiraError(resp, e)
-	}
-	return responseUser, resp, nil
-}
-
-type UpdateResponse struct {
-	Self         string `json:"self"`
-	Key          string `json:"key"`
-	Name         string `json:"name"`
-	EmailAddress string `json:"emailAddress"`
-	DisplayName  string `json:"displayName"`
-}
-/*
-func  (c *JIRAClient) UserSearch(username string) (*[]User, *http.Response) {
-	u := fmt.Sprintf("/rest/api/2/user/search?username=%s", username)
-
-	//payload := nil
-
-	response := new([]User)
-	_, res2  := c.doRequest("GET", u , nil, &response)
-
-	//	fmt.Println("res: " + string(res))
-
-	return response, res2
-}
-*/
-
-// GetByAccountIDWithContext gets user info from JIRA
-//
-// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUser
+// GetByAccountIDWithContext gets user info from Jira
+// Searching by another parameter that is not accountId is deprecated,
+// but this method is kept for backwards compatibility
+// Jira API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUser
 func (s *UserService) GetByAccountIDWithContext(ctx context.Context, accountID string) (*User, *Response, error) {
 	apiEndpoint := fmt.Sprintf("/rest/api/2/user?accountId=%s", accountID)
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
@@ -151,9 +93,9 @@ func (s *UserService) GetByAccountID(accountID string) (*User, *Response, error)
 	return s.GetByAccountIDWithContext(context.Background(), accountID)
 }
 
-// CreateWithContext creates an user in JIRA.
+// CreateWithContext creates an user in Jira.
 //
-// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-createUser
+// Jira API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-createUser
 func (s *UserService) CreateWithContext(ctx context.Context, user *User) (*User, *Response, error) {
 	apiEndpoint := "/rest/api/2/user"
 	req, err := s.client.NewRequestWithContext(ctx, "POST", apiEndpoint, user)
@@ -186,12 +128,13 @@ func (s *UserService) Create(user *User) (*User, *Response, error) {
 	return s.CreateWithContext(context.Background(), user)
 }
 
-// DeleteWithContext deletes an user from JIRA.
+// DeleteWithContext deletes an user from Jira.
 // Returns http.StatusNoContent on success.
 //
-// JIRA API docs: https://developer.atlassian.com/cloud/jira/platform/rest/#api-api-2-user-delete
-func (s *UserService) DeleteWithContext(ctx context.Context, username string) (*Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/user?username=%s", username)
+// Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-rest-api-2-user-delete
+// Caller must close resp.Body
+func (s *UserService) DeleteWithContext(ctx context.Context, accountId string) (*Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/user?accountId=%s", accountId)
 	req, err := s.client.NewRequestWithContext(ctx, "DELETE", apiEndpoint, nil)
 	if err != nil {
 		return nil, err
@@ -205,15 +148,16 @@ func (s *UserService) DeleteWithContext(ctx context.Context, username string) (*
 }
 
 // Delete wraps DeleteWithContext using the background context.
-func (s *UserService) Delete(username string) (*Response, error) {
-	return s.DeleteWithContext(context.Background(), username)
+// Caller must close resp.Body
+func (s *UserService) Delete(accountId string) (*Response, error) {
+	return s.DeleteWithContext(context.Background(), accountId)
 }
 
 // GetGroupsWithContext returns the groups which the user belongs to
 //
-// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUserGroups
-func (s *UserService) GetGroupsWithContext(ctx context.Context, username string) (*[]UserGroup, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/user/groups?username=%s", username)
+// Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-rest-api-2-user-groups-get
+func (s *UserService) GetGroupsWithContext(ctx context.Context, accountId string) (*[]UserGroup, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/user/groups?accountId=%s", accountId)
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
@@ -228,13 +172,13 @@ func (s *UserService) GetGroupsWithContext(ctx context.Context, username string)
 }
 
 // GetGroups wraps GetGroupsWithContext using the background context.
-func (s *UserService) GetGroups(username string) (*[]UserGroup, *Response, error) {
-	return s.GetGroupsWithContext(context.Background(), username)
+func (s *UserService) GetGroups(accountId string) (*[]UserGroup, *Response, error) {
+	return s.GetGroupsWithContext(context.Background(), accountId)
 }
 
 // GetSelfWithContext information about the current logged-in user
 //
-// JIRA API docs: https://developer.atlassian.com/cloud/jira/platform/rest/#api-api-2-myself-get
+// Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-rest-api-2-myself-get
 func (s *UserService) GetSelfWithContext(ctx context.Context) (*User, *Response, error) {
 	const apiEndpoint = "rest/api/2/myself"
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
@@ -286,14 +230,38 @@ func WithInactive(inactive bool) userSearchF {
 	}
 }
 
-// FindWithContext searches for user info from JIRA:
-// It can find users by email, username or name
+// WithUsername sets the username to search
+func WithUsername(username string) userSearchF {
+	return func(s userSearch) userSearch {
+		s = append(s, userSearchParam{name: "username", value: username})
+		return s
+	}
+}
+
+// WithAccountId sets the account id to search
+func WithAccountId(accountId string) userSearchF {
+	return func(s userSearch) userSearch {
+		s = append(s, userSearchParam{name: "accountId", value: accountId})
+		return s
+	}
+}
+
+// WithProperty sets the property (Property keys are specified by path) to search
+func WithProperty(property string) userSearchF {
+	return func(s userSearch) userSearch {
+		s = append(s, userSearchParam{name: "property", value: property})
+		return s
+	}
+}
+
+// FindWithContext searches for user info from Jira:
+// It can find users by email or display name using the query parameter
 //
-// JIRA API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-findUsers
+// Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-rest-api-2-user-search-get
 func (s *UserService) FindWithContext(ctx context.Context, property string, tweaks ...userSearchF) ([]User, *Response, error) {
 	search := []userSearchParam{
 		{
-			name:  "username",
+			name:  "query",
 			value: property,
 		},
 	}

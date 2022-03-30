@@ -102,6 +102,3 @@ All notable changes to this project will be documented in this file. See [standa
 * Add ResolutionService to retrieve resolutions ([fb1ce22](https://github.com/andygrunwald/go-jira/commit/fb1ce22))
 * Add status category constants ([6223ddd](https://github.com/andygrunwald/go-jira/commit/6223ddd))
 * Add StatusCategory GetList ([049a756](https://github.com/andygrunwald/go-jira/commit/049a756))
-
-
-

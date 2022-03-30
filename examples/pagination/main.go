@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	jira "github.com/andygrunwald/go-jira"
+	jira "github.com/perolo/jira-client"
 )
 
 // GetAllIssues will implement pagination of api and get all the issues.
@@ -28,8 +28,8 @@ func GetAllIssues(client *jira.Client, searchString string) ([]jira.Issue, error
 		if issues == nil {
 			issues = make([]jira.Issue, 0, total)
 		}
-		issues = append(issues, chunk...)
-		last = resp.StartAt + len(chunk)
+		issues = append(issues, chunk.Issues...)
+		last = resp.StartAt + len(chunk.Issues)
 		if last >= total {
 			return issues, nil
 		}
