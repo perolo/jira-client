@@ -7,7 +7,7 @@ import (
 	"strings"
 	"syscall"
 
-	jira "github.com/andygrunwald/go-jira"
+	jira "github.com/perolo/jira-client"
 	"golang.org/x/term"
 )
 
@@ -27,7 +27,6 @@ func main() {
 	tp := jira.BasicAuthTransport{
 		Username: strings.TrimSpace(username),
 		Password: strings.TrimSpace(password),
-		UseToken: cfg.UseToken,
 	}
 
 	client, err := jira.NewClient(tp.Client(), strings.TrimSpace(jiraURL))
@@ -35,19 +34,14 @@ func main() {
 		fmt.Printf("\nerror: %v\n", err)
 		return
 	}
-	if cfg.UseToken {
-		jiraClient.Authentication.SetTokenAuth(cfg.JiraToken, cfg.UseToken)
-	} else {
-		jiraClient.Authentication.SetBasicAuth(cfg.JiraUser, cfg.JiraPass, cfg.UseToken)
-	}
 
 	i := jira.Issue{
 		Fields: &jira.IssueFields{
 			Assignee: &jira.User{
-				Name: "myuser",
+				AccountID: "my-user-account-id",
 			},
 			Reporter: &jira.User{
-				Name: "youruser",
+				AccountID: "your-user-account-id",
 			},
 			Description: "Test Issue",
 			Type: jira.IssueType{
@@ -65,5 +59,5 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("%s: %+v\n", issue.Key, issue.Fields.Summary)
+	fmt.Printf("%s: %+v\n", issue.Key, issue.Self)
 }

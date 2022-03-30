@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -17,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt"
 	"github.com/google/go-querystring/query"
 	"github.com/pkg/errors"
 )
@@ -39,7 +38,7 @@ type Client struct {
 	// Session storage if the user authenticates with a Session cookie
 	session *Session
 
-	// Services used for talking to different parts of the JIRA API.
+	// Services used for talking to different parts of the Jira API.
 	Authentication   *AuthenticationService
 	Issue            *IssueService
 	Project          *ProjectService
@@ -61,6 +60,8 @@ type Client struct {
 	IssueLinkType    *IssueLinkTypeService
 	Organization     *OrganizationService
 	ServiceDesk      *ServiceDeskService
+	Customer         *CustomerService
+	Request          *RequestService
 
 	Debug bool
 }
@@ -112,6 +113,8 @@ func NewClient(httpClient httpClient, baseURL string) (*Client, error) {
 	c.IssueLinkType = &IssueLinkTypeService{client: c}
 	c.Organization = &OrganizationService{client: c}
 	c.ServiceDesk = &ServiceDeskService{client: c}
+	c.Customer = &CustomerService{client: c}
+	c.Request = &RequestService{client: c}
 
 	return c, nil
 }
@@ -146,17 +149,9 @@ func (c *Client) NewRawRequestWithContext(ctx context.Context, method, urlStr st
 		}
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
-		if c.Authentication.Usetoken {
-			panic(err)
-		} else {
-			if c.Authentication.username != "" {
-				req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
-			}
+		if c.Authentication.username != "" {
+			req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
 		}
-	} else if c.Authentication.authType == authTypeToken {
-		SetTokenAuth(req, c.Authentication.password)
-	} else {
-		panic(nil)
 	}
 
 	return req, nil
@@ -231,23 +226,9 @@ func (c *Client) NewRequestWithContext(ctx context.Context, method, urlStr strin
 		}
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
-		if c.Authentication.Usetoken {
-			panic(err)
-		} else {
-			if c.Authentication.username != "" {
-				req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
-			}
+		if c.Authentication.username != "" {
+			req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
 		}
-	} else if c.Authentication.authType == authTypeToken {
-		SetTokenAuth(req, c.Authentication.password)
-	} else if c.Authentication.authType == authTypeNo {
-		// Do nothing
-		//fmt.Println("noauth")
-	} else {
-		panic(nil)
-	}
-	if c.Debug {
-		log.Printf("Sending request to services: \n %s", formatRequest(req))
 	}
 
 	return req, nil
@@ -311,17 +292,9 @@ func (c *Client) NewMultiPartRequestWithContext(ctx context.Context, method, url
 		}
 	} else if c.Authentication.authType == authTypeBasic {
 		// Set basic auth information
-		if c.Authentication.Usetoken {
-			panic(err)
-		} else {
-			if c.Authentication.username != "" {
-				req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
-			}
+		if c.Authentication.username != "" {
+			req.SetBasicAuth(c.Authentication.username, c.Authentication.password)
 		}
-	} else if c.Authentication.authType == authTypeToken {
-		SetTokenAuth(req, c.Authentication.password)
-	} else {
-		panic(nil)
 	}
 
 	return req, nil
@@ -344,7 +317,7 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 	if err != nil {
 		// Even though there was an error, we still return the response
 		// in case the caller wants to inspect it further
-		fmt.Printf("resp status: %s\n", httpResp.Status)
+		//		fmt.Printf("resp status: %s\n", httpResp.Status)
 		return newResponse(httpResp, nil), err
 	}
 
@@ -463,15 +436,10 @@ func (r *Response) populatePageValues(v interface{}) {
 type BasicAuthTransport struct {
 	Username string
 	Password string
-	UseToken bool
 
 	// Transport is the underlying HTTP transport to use when making requests.
 	// It will default to http.DefaultTransport if nil.
 	Transport http.RoundTripper
-}
-
-func SetTokenAuth(r *http.Request, password string) {
-	r.Header.Set("Authorization", "Bearer "+password)
 }
 
 // RoundTrip implements the RoundTripper interface.  We just add the
@@ -479,11 +447,7 @@ func SetTokenAuth(r *http.Request, password string) {
 func (t *BasicAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req2 := cloneRequest(req) // per RoundTripper contract
 
-	if t.UseToken {
-		SetTokenAuth(req2, t.Password)
-	} else {
-		req2.SetBasicAuth(t.Username, t.Password)
-	}
+	req2.SetBasicAuth(t.Username, t.Password)
 	return t.transport().RoundTrip(req2)
 }
 
@@ -497,6 +461,77 @@ func (t *BasicAuthTransport) Client() *http.Client {
 }
 
 func (t *BasicAuthTransport) transport() http.RoundTripper {
+	if t.Transport != nil {
+		return t.Transport
+	}
+	return http.DefaultTransport
+}
+
+// BearerAuthTransport is a http.RoundTripper that authenticates all requests
+// using Jira's bearer (oauth 2.0 (3lo)) based authentication.
+type BearerAuthTransport struct {
+	Token string
+
+	// Transport is the underlying HTTP transport to use when making requests.
+	// It will default to http.DefaultTransport if nil.
+	Transport http.RoundTripper
+}
+
+// RoundTrip implements the RoundTripper interface.  We just add the
+// bearer token and return the RoundTripper for this transport type.
+func (t *BearerAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req2 := cloneRequest(req) // per RoundTripper contract
+
+	req2.Header.Set("Authorization", fmt.Sprintf("Bearer %s", t.Token))
+	return t.transport().RoundTrip(req2)
+}
+
+// Client returns an *http.Client that makes requests that are authenticated
+// using HTTP Basic Authentication.  This is a nice little bit of sugar
+// so we can just get the client instead of creating the client in the calling code.
+// If it's necessary to send more information on client init, the calling code can
+// always skip this and set the transport itself.
+func (t *BearerAuthTransport) Client() *http.Client {
+	return &http.Client{Transport: t}
+}
+
+func (t *BearerAuthTransport) transport() http.RoundTripper {
+	if t.Transport != nil {
+		return t.Transport
+	}
+	return http.DefaultTransport
+}
+
+// PATAuthTransport is an http.RoundTripper that authenticates all requests
+// using the Personal Access Token specified.
+// See here for more info: https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html
+type PATAuthTransport struct {
+	// Token is the key that was provided by Jira when creating the Personal Access Token.
+	Token string
+
+	// Transport is the underlying HTTP transport to use when making requests.
+	// It will default to http.DefaultTransport if nil.
+	Transport http.RoundTripper
+}
+
+// RoundTrip implements the RoundTripper interface.  We just add the
+// basic auth and return the RoundTripper for this transport type.
+func (t *PATAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req2 := cloneRequest(req) // per RoundTripper contract
+	req2.Header.Set("Authorization", "Bearer "+t.Token)
+	return t.transport().RoundTrip(req2)
+}
+
+// Client returns an *http.Client that makes requests that are authenticated
+// using HTTP Basic Authentication.  This is a nice little bit of sugar
+// so we can just get the client instead of creating the client in the calling code.
+// If it's necessary to send more information on client init, the calling code can
+// always skip this and set the transport itself.
+func (t *PATAuthTransport) Client() *http.Client {
+	return &http.Client{Transport: t}
+}
+
+func (t *PATAuthTransport) transport() http.RoundTripper {
 	if t.Transport != nil {
 		return t.Transport
 	}
@@ -565,6 +600,7 @@ func (t *CookieAuthTransport) setSessionObject() error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	t.SessionObject = resp.Cookies()
 	return nil

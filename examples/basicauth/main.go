@@ -3,12 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	jira "github.com/perolo/jira-client"
 	"golang.org/x/term"
 	"os"
 	"strings"
 	"syscall"
-
-	jira "github.com/andygrunwald/go-jira"
 )
 
 func main() {
@@ -27,7 +26,6 @@ func main() {
 	tp := jira.BasicAuthTransport{
 		Username: strings.TrimSpace(username),
 		Password: strings.TrimSpace(password),
-		UseToken: cfg.UseToken,
 	}
 
 	client, err := jira.NewClient(tp.Client(), strings.TrimSpace(jiraURL))

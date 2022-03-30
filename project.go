@@ -37,7 +37,7 @@ type ProjectCategory struct {
 	Description string `json:"description" structs:"description,omitempty"`
 }
 
-// Project represents a JIRA Project.
+// Project represents a Jira Project.
 type Project struct {
 	Expand          string             `json:"expand,omitempty" structs:"expand,omitempty"`
 	Self            string             `json:"self,omitempty" structs:"self,omitempty"`

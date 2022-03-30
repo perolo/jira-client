@@ -213,6 +213,7 @@ func (s *GroupService) RemoveWithContext(ctx context.Context, groupname string, 
 }
 
 // Remove wraps RemoveWithContext using the background context.
+// Caller must close resp.Body
 func (s *GroupService) Remove(groupname string, username string) (*Response, error) {
 	return s.RemoveWithContext(context.Background(), groupname, username)
 }
