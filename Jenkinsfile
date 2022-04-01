@@ -5,7 +5,7 @@ pipeline {
     environment {
         GO114MODULE = 'on'
         CGO_ENABLED = 0 
-        GOPATH = "${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_ID}"
+        GOPATH = "/home/perolo/Projects/Jenkins/jobs/${JOB_NAME}/builds/${BUILD_ID}"
     }
     stages {        
         stage('Pre Test') {
@@ -13,6 +13,7 @@ pipeline {
                 echo 'Installing dependencies'
                 sh 'go env GOPATH'
                 sh 'go env GOROOT'
+                sh 'go env JENKINS_HOME'
                 sh 'ls -al $GOPATH'
                 sh 'whoami'
                 sh 'go version'
