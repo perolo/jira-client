@@ -13,6 +13,8 @@ pipeline {
                 echo 'Installing dependencies'
                 sh 'go env GOPATH'
                 sh 'go env GOROOT'
+                sh 'ls -al $GOPATH'
+                sh 'whoami'
                 sh 'go version'
             }
         }
