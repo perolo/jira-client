@@ -14,6 +14,8 @@ pipeline {
                 sh 'go env GOPATH'
                 sh 'go env GOROOT'
                 sh 'go env JENKINS_HOME'
+                sh 'pwd'
+                sh 'ls -al'
                 sh 'ls -al $GOPATH'
                 sh 'whoami'
                 sh 'go version'
