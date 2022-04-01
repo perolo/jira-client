@@ -5,7 +5,7 @@ pipeline {
     environment {
         GO114MODULE = 'on'
         CGO_ENABLED = 0 
-        GOPATH = "/home/perolo/Projects/Jenkins/jobs/${JOB_NAME}/builds/${BUILD_ID}"
+        GOPATH = "/home/perolo/Jenkins/workspace/${JOB_NAME}"
     }
     stages {        
         stage('Pre Test') {
