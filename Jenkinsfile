@@ -10,7 +10,9 @@ pipeline {
     stages {        
         stage('Pre Test') {
             steps {
-                echo 'Installing dependencies'
+                echo 'Installing dependenciess
+                sh 'go env GOPATH'
+                sh 'go env GOROOT'
                 sh 'go version'
             }
         }
