@@ -48,7 +48,7 @@ pipeline {
             archiveArtifacts artifacts: 'cover.out', fingerprint: true
             archiveArtifacts artifacts: 'coverage.html', fingerprint: true
             junit 'report.xml'
-            publishHTML (target : [allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'reports', reportFiles: 'coverage.html', reportName: 'My Reports', reportTitles: 'The Report'])
+            publishHTML (target : [allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, reportDir: '', reportFiles: 'coverage.html', reportName: 'My Reports', reportTitles: 'The Report'])
         }
     }        
 }
