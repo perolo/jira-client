@@ -234,7 +234,7 @@ func (s *GroupService) GetGroups() (*GroupsResult, *Response, error) {
 }
 func (s *GroupService) GetGroupsWithContext(ctx context.Context) (*GroupsResult, *Response, error) {
 	///rest/api/2/groups/picker?query&exclude&maxResults
-	apiEndpoint := fmt.Sprintf("/rest/api/2/groups/picker?maxResults=10000")
+	apiEndpoint := "/rest/api/2/groups/picker?maxResults=10000"
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
@@ -273,7 +273,7 @@ func (s *GroupService) AddGroup(name string) (*AddGroupsResult, *Response, error
 }
 func (s *GroupService) AddGroupsWithContext(ctx context.Context, name string) (*AddGroupsResult, *Response, error) {
 	///rest/api/2/groups/picker?query&exclude&maxResults
-	apiEndpoint := fmt.Sprintf("/rest/api/2/group")
+	apiEndpoint := "/rest/api/2/group"
 
 	var group struct {
 		Name string `json:"name"`

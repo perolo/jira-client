@@ -2,7 +2,6 @@ package jira
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/go-querystring/query"
 )
 
@@ -97,7 +96,7 @@ type CustomFieldsResponseType struct {
 //rest/api/2/customFields
 
 func (s *FieldService) GetAllCustomFieldsWithContext(ctx context.Context, options *FieldOptions) (*CustomFieldsResponseType, *Response, error) {
-	apiEndpoint := fmt.Sprintf("rest/api/2/customFields")
+	apiEndpoint := "rest/api/2/customFields"
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
