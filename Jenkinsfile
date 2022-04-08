@@ -1,11 +1,12 @@
 pipeline {
     agent {
-        docker { image 'golang:alpine' }
+        docker { image 'golang:1.18-stretch' }
     }
     environment {
         GO114MODULE = 'on'
         CGO_ENABLED = 0 
         GOPATH = "/home/perolo/Jenkins/workspace/${JOB_NAME}"
+        HOME = "/home/perolo/Jenkins/workspace/${JOB_NAME}"
     }
     stages {        
         stage('Pre Test') {
