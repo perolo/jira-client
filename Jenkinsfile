@@ -40,13 +40,11 @@ pipeline {
                 }
             }
         }
-        stage('Report') {
-            junit 'report.xml'
-        }
     }
     post {
         always {
             archiveArtifacts artifacts: 'report.xml', fingerprint: true
+            junit 'report.xml'
         }
     }        
 }
