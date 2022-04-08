@@ -36,7 +36,7 @@ pipeline {
                     //sh 'golint .'
                     //sh 'staticcheck ./...'
                     echo 'Running test'
-                    sh 'cd test && go test -v'
+                    sh 'go test -v'
                 }
             }
         }
