@@ -40,8 +40,8 @@ pipeline {
                 }
             }
         }
-        stage('Integration') {
-            junit 'test-results.xml'
+        stage('Report') {
+            junit 'report.xml'
         }
     }
     post {
