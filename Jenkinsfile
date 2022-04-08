@@ -12,9 +12,7 @@ pipeline {
         stage('Pre Test') {
             steps {
                 echo 'Installing dependencies'
-                sh 'go env GOPATH'
-                sh 'go env GOROOT'
-                sh 'go env JENKINS_HOME'
+                sh 'env'
                 sh 'pwd'
                 sh 'ls -al'
                 sh 'ls -al $GOPATH'
