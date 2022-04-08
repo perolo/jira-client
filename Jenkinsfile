@@ -17,6 +17,7 @@ pipeline {
                 sh 'ls -al'
                 sh 'ls -al $GOPATH'
                 sh 'go version'
+                sh 'go install honnef.co/go/tools/cmd/staticcheck@latest'
             }
         }
         
@@ -34,7 +35,7 @@ pipeline {
                     sh 'go vet .'
                     //echo 'Running linting'
                     //sh 'golint .'
-                    //sh 'staticcheck ./...'
+                    sh 'staticcheck ./...'
                     echo 'Running test'
                     sh 'go test -v'
                 }
