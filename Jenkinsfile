@@ -16,7 +16,6 @@ pipeline {
                 sh 'pwd'
                 sh 'ls -al'
                 sh 'ls -al $GOPATH'
-                sh 'whoami'
                 sh 'go version'
             }
         }
