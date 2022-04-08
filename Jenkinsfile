@@ -13,11 +13,10 @@ pipeline {
             steps {
                 echo 'Installing dependencies'
                 sh 'env'
-                sh 'pwd'
-                sh 'ls -al'
-                sh 'ls -al $GOPATH'
+                sh 'pwd'             
                 sh 'go version'
                 sh 'go install honnef.co/go/tools/cmd/staticcheck@latest'
+                sh 'go install github.com/jstemmer/go-junit-report@latest'
             }
         }
         
@@ -37,10 +36,14 @@ pipeline {
                     //sh 'golint .'
                     sh 'staticcheck ./...'
                     echo 'Running test'
-                    sh 'go test -v'
+                    sh 'go test -v 2>&1 | go-junit-report > report.xml'
                 }
             }
         }
-        
+        post {
+            always {
+                archiveArtifacts artifacts: 'report.xml', fingerprint: true
+            }
+        }        
     }
 }
