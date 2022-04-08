@@ -34,12 +34,11 @@ pipeline {
                 withEnv(["PATH+GO=${GOPATH}/bin"]){
                     echo 'Running vetting'
                     sh 'go vet .'
-                    //echo 'Running linting'
-                    //sh 'golint .'
+                    //echo 'Running staticcheck'
                     sh 'staticcheck ./...'
                     echo 'Running test'
-                    sh 'go test -v 2>&1 -coverprofile=cover.out | go-junit-report > report.xml'
-                    sh 'go tool cover -html=cover.out -o coverage.html'
+                    sh 'go test -v 2>&1 | go-junit-report > report.xml'
+                    echo 'Running coverage'
                     sh 'gocov test ./... | gocov-xml > coverage.xml'
                 }
             }
@@ -48,11 +47,8 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'report.xml', fingerprint: true
-            archiveArtifacts artifacts: 'cover.out', fingerprint: true
-            archiveArtifacts artifacts: 'coverage.html', fingerprint: true
             archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
             junit 'report.xml'
-            publishHTML (target : [allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, reportDir: '', reportFiles: 'coverage.html', reportName: 'My Reports', reportTitles: 'The Report'])
             cobertura coberturaReportFile: 'coverage.xml'
         }
     }        
