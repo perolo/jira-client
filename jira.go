@@ -161,6 +161,8 @@ func (c *Client) NewRawRequestWithContext(ctx context.Context, method, urlStr st
 func (c *Client) NewRawRequest(method, urlStr string, body io.Reader) (*http.Request, error) {
 	return c.NewRawRequestWithContext(context.Background(), method, urlStr, body)
 }
+
+/* Unused - staticcheck
 func formatRequest(r *http.Request) string {
 	// Create return string
 	var request []string
@@ -186,7 +188,7 @@ func formatRequest(r *http.Request) string {
 	// Return the request as a string
 	return strings.Join(request, "\n")
 }
-
+*/
 // NewRequestWithContext creates an API request.
 // A relative URL can be provided in urlStr, in which case it is resolved relative to the baseURL of the Client.
 // If specified, the value pointed to by body is JSON encoded and included as the request body.
