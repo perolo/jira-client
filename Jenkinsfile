@@ -32,9 +32,9 @@ pipeline {
                 withEnv(["PATH+GO=${GOPATH}/bin"]){
                     echo 'Running vetting'
                     sh 'go vet .'
-                    #echo 'Running linting'
-                    #sh 'golint .'
-                    # 'staticcheck ./...'
+                    //echo 'Running linting'
+                    //sh 'golint .'
+                    //sh 'staticcheck ./...'
                     echo 'Running test'
                     sh 'cd test && go test -v'
                 }
