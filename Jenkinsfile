@@ -40,6 +40,9 @@ pipeline {
                 }
             }
         }
+        stage('Integration') {
+            junit 'test-results.xml'
+        }
     }
     post {
         always {
