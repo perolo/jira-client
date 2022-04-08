@@ -5,7 +5,7 @@ pipeline {
     environment {
         GO114MODULE = 'on'
         CGO_ENABLED = 0 
-        GOPATH = "/go
+        GOPATH = "/go"
         HOME = "/home/perolo/Jenkins/workspace/${JOB_NAME}"
     }
     stages {        
