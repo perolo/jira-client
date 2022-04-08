@@ -17,6 +17,8 @@ pipeline {
                 sh 'go version'
                 sh 'go install honnef.co/go/tools/cmd/staticcheck@latest'
                 sh 'go install github.com/jstemmer/go-junit-report@latest'
+                sh 'go install github.com/axw/gocov/gocov@latest'
+                sh 'go install github.com/AlekSi/gocov-xml@latest'
             }
         }
         
@@ -38,6 +40,7 @@ pipeline {
                     echo 'Running test'
                     sh 'go test -v 2>&1 -coverprofile=cover.out | go-junit-report > report.xml'
                     sh 'go tool cover -html=cover.out -o coverage.html'
+                    sh 'gocov test ./... | gocov-xml > coverage.xml'
                 }
             }
         }
@@ -47,8 +50,10 @@ pipeline {
             archiveArtifacts artifacts: 'report.xml', fingerprint: true
             archiveArtifacts artifacts: 'cover.out', fingerprint: true
             archiveArtifacts artifacts: 'coverage.html', fingerprint: true
+            archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
             junit 'report.xml'
             publishHTML (target : [allowMissing: false, alwaysLinkToLastBuild: true, keepAll: true, reportDir: '', reportFiles: 'coverage.html', reportName: 'My Reports', reportTitles: 'The Report'])
+            cobertura coberturaReportFile: 'coverage.xml'
         }
     }        
 }
