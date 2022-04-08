@@ -40,10 +40,10 @@ pipeline {
                 }
             }
         }
-        post {
-            always {
-                archiveArtifacts artifacts: 'report.xml', fingerprint: true
-            }
-        }        
     }
+    post {
+        always {
+            archiveArtifacts artifacts: 'report.xml', fingerprint: true
+        }
+    }        
 }
