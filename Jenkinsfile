@@ -36,7 +36,8 @@ pipeline {
                     //sh 'golint .'
                     sh 'staticcheck ./...'
                     echo 'Running test'
-                    sh 'go test -v 2>&1 | go-junit-report > report.xml'
+                    sh 'go test -v 2>&1 -coverprofile=cover.out | go-junit-report > report.xml'
+                    sh 'go tool cover -html=cover.out -o coverage.html'
                 }
             }
         }
@@ -44,7 +45,10 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'report.xml', fingerprint: true
+            archiveArtifacts artifacts: 'cover.out', fingerprint: true
+            archiveArtifacts artifacts: 'coverage.html', fingerprint: true
             junit 'report.xml'
+            publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: ‘coverage’, reportFiles: ‘coverage.html’, reportName: ‘HTML Report’, reportTitles: ‘Coverage Report’])
         }
     }        
 }
