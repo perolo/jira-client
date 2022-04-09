@@ -136,7 +136,7 @@ func (fs *FilterService) GetListWithContext(ctx context.Context) ([]*Filter, *Re
 	}
 	req.URL.RawQuery = q.Encode()
 
-	filters := []*Filter{}
+	filters := make([]*Filter, 0) //[]*Filter{}
 	resp, err := fs.client.Do(req, &filters)
 	if err != nil {
 		jerr := NewJiraError(resp, err)
@@ -157,7 +157,7 @@ func (fs *FilterService) GetFavouriteListWithContext(ctx context.Context) ([]*Fi
 	if err != nil {
 		return nil, nil, err
 	}
-	filters := []*Filter{}
+	filters := make([]*Filter, 0) //[]*Filter{}
 	resp, err := fs.client.Do(req, &filters)
 	if err != nil {
 		jerr := NewJiraError(resp, err)
@@ -267,7 +267,7 @@ func (fs *FilterService) GetMyFiltersWithContext(ctx context.Context, opts *GetM
 		return nil, nil, err
 	}
 
-	filters := []*Filter{}
+	filters := make([]*Filter, 0) //[]*Filter{}
 	resp, err := fs.client.Do(req, &filters)
 	if err != nil {
 		jerr := NewJiraError(resp, err)

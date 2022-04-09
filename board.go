@@ -246,7 +246,7 @@ func (s *BoardService) GetAllSprintsWithContext(ctx context.Context, boardID str
 		return nil, nil, err
 	}
 
-	result, response, err := s.GetAllSprintsWithOptions(id, &GetAllSprintsOptions{})
+	result, response, err := s.GetAllSprintsWithOptionsWithContext(ctx, id, &GetAllSprintsOptions{})
 	if err != nil {
 		return nil, nil, err
 	}

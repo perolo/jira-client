@@ -20,12 +20,14 @@ type StatusCategory struct {
 }
 
 // These constants are the keys of the default Jira status categories
+/*
 const (
 	StatusCategoryComplete   = "done"
 	StatusCategoryInProgress = "indeterminate"
 	StatusCategoryToDo       = "new"
 	StatusCategoryUndefined  = "undefined"
 )
+*/
 
 // GetListWithContext gets all status categories from Jira
 //
@@ -37,7 +39,7 @@ func (s *StatusCategoryService) GetListWithContext(ctx context.Context) ([]Statu
 		return nil, nil, err
 	}
 
-	statusCategoryList := []StatusCategory{}
+	statusCategoryList := make([]StatusCategory, 0) //[]StatusCategory{}
 	resp, err := s.client.Do(req, &statusCategoryList)
 	if err != nil {
 		return nil, resp, NewJiraError(resp, err)

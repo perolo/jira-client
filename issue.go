@@ -20,10 +20,12 @@ import (
 	"github.com/trivago/tgo/tcontainer"
 )
 
+/*
 const (
 	// AssigneeAutomatic represents the value of the "Assignee: Automatic" of Jira
 	AssigneeAutomatic = "-1"
 )
+*/
 
 // IssueService handles Issues for the Jira instance / API.
 //
@@ -446,8 +448,8 @@ func (t *Date) UnmarshalJSON(b []byte) error {
 // date string as Jira expects during the creation of a
 // Jira request
 func (t Date) MarshalJSON() ([]byte, error) {
-	time := time.Time(t)
-	return []byte(time.Format("\"2006-01-02\"")), nil
+	theTime := time.Time(t)
+	return []byte(theTime.Format("\"2006-01-02\"")), nil
 }
 
 // Worklog represents the work log of a Jira issue.
@@ -586,7 +588,7 @@ type SearchOptions struct {
 	ValidateQuery string `url:"validateQuery,omitempty"`
 }
 
-// searchResult is only a small wrapper around the Search (with JQL) method
+// SearchResult is only a small wrapper around the Search (with JQL) method
 // to be able to parse the results
 type SearchResult struct {
 	Issues     []Issue `json:"issues" structs:"issues"`
@@ -749,7 +751,10 @@ func (s *IssueService) PostAttachmentWithContext(ctx context.Context, issueID st
 			return nil, nil, err
 		}
 	}
-	writer.Close()
+	err = writer.Close()
+	if err != nil {
+		return nil, nil, err
+	}
 
 	req, err := s.client.NewMultiPartRequestWithContext(ctx, "POST", apiEndpoint, b)
 	if err != nil {
@@ -853,7 +858,7 @@ func (s *IssueService) GetWorklogs(issueID string, options ...func(*http.Request
 	return s.GetWorklogsWithContext(context.Background(), issueID, options...)
 }
 
-// Applies query options to http request.
+// WithQueryOptions Applies query options to http request.
 // This helper is meant to be used with all "QueryOptions" structs.
 func WithQueryOptions(options interface{}) func(*http.Request) error {
 	q, err := query.Values(options)
@@ -887,7 +892,7 @@ func (s *IssueService) CreateWithContext(ctx context.Context, issue *Issue) (*Is
 	}
 
 	responseIssue := new(Issue)
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, resp, fmt.Errorf("could not read the returned data")
@@ -911,11 +916,11 @@ func (s *IssueService) Create(issue *Issue) (*Issue, *Response, error) {
 // Caller must close resp.Body
 func (s *IssueService) UpdateWithOptionsWithContext(ctx context.Context, issue *Issue, opts *UpdateQueryOptions) (*Issue, *Response, error) {
 	apiEndpoint := fmt.Sprintf("rest/api/2/issue/%v", issue.Key)
-	url, err := addOptions(apiEndpoint, opts)
+	theURL, err := addOptions(apiEndpoint, opts)
 	if err != nil {
 		return nil, nil, err
 	}
-	req, err := s.client.NewRequestWithContext(ctx, "PUT", url, issue)
+	req, err := s.client.NewRequestWithContext(ctx, "PUT", theURL, issue)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1069,7 +1074,7 @@ func (s *IssueService) DeleteCommentWithContext(ctx context.Context, issueID, co
 		jerr := NewJiraError(resp, err)
 		return jerr
 	}
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 
 	return nil
 }
@@ -1229,11 +1234,11 @@ func (s *IssueService) SearchPagesWithContext(ctx context.Context, jql string, o
 			MaxResults: 50,
 		}
 	}
-/*
-	if options.MaxResults == 0 {  //perolo - This is plain Wrong! - MaxResult==0 means get the total without objects!
-		options.MaxResults = 50
-	}
-*/
+	/*
+		if options.MaxResults == 0 {  //perolo - This is plain Wrong! - MaxResult==0 means get the total without objects!
+			options.MaxResults = 50
+		}
+	*/
 	issues, resp, err := s.SearchWithContext(ctx, jql, options)
 	if err != nil {
 		return err
@@ -1500,7 +1505,7 @@ func (s *IssueService) GetWatchersWithContext(ctx context.Context, issueID strin
 		return nil, nil, NewJiraError(resp, err)
 	}
 
-	result := []User{}
+	result := make([]User, 0) // []User{}
 	for _, watcher := range watches.Watchers {
 		var user *User
 		if watcher.AccountID != "" {
@@ -1680,7 +1685,6 @@ func (s *IssueService) UpdateRemoteLinkWithContext(ctx context.Context, issueID 
 func (s *IssueService) UpdateRemoteLink(issueID string, linkID int, remotelink *RemoteLink) (*Response, error) {
 	return s.UpdateRemoteLinkWithContext(context.Background(), issueID, linkID, remotelink)
 }
-
 
 type TotalResult struct {
 	Totalpoints string `json:"Totalpoints"`

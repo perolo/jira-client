@@ -68,7 +68,7 @@ func (s *VersionService) CreateWithContext(ctx context.Context, version *Version
 	}
 
 	responseVersion := new(Version)
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		e := fmt.Errorf("could not read the returned data")
@@ -115,14 +115,12 @@ func (s *VersionService) Update(version *Version) (*Version, *Response, error) {
 	return s.UpdateWithContext(context.Background(), version)
 }
 
-
 type RelatedIssueCounts struct {
 	Self                                     string `json:"self"`
 	IssuesFixedCount                         int    `json:"issuesFixedCount"`
 	IssuesAffectedCount                      int    `json:"issuesAffectedCount"`
 	IssueCountWithCustomFieldsShowingVersion int    `json:"issueCountWithCustomFieldsShowingVersion"`
 }
-
 
 func (s *VersionService) GetRelatedIssueCounts(versionID string, options *GetQueryOptions) (*RelatedIssueCounts, *Response, error) {
 	apiEndpoint := fmt.Sprintf("rest/api/latest/version/%s/relatedIssueCounts", versionID)

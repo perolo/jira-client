@@ -147,7 +147,8 @@ func (s *GroupService) GetWithOptions(name string, options *GroupSearchOptions) 
 
 //	/rest/api/2/user/permission/search
 
-func (s *GroupService) SearchPermissionsWithOptionsWithContext(ctx context.Context, permissiosn string, options *PermissionSearchOptions) (*PermissionSearchResultType, *Response, error) {
+// SearchPermissionsWithOptionsWithContext func (s *GroupService) SearchPermissionsWithOptionsWithContext(ctx context.Context, permissiosn string, options *PermissionSearchOptions) (*PermissionSearchResultType, *Response, error) {
+func (s *GroupService) SearchPermissionsWithOptionsWithContext(ctx context.Context, options *PermissionSearchOptions) (*PermissionSearchResultType, *Response, error) {
 	var apiEndpoint string
 	apiEndpoint, _ = addOptions("/rest/api/2/user/permission/search", options)
 
@@ -228,7 +229,7 @@ type GroupsResult struct {
 	} `json:"groups"`
 }
 
-// Get wraps GetWithContext using the background context.
+// GetGroups Get wraps GetWithContext using the background context.
 func (s *GroupService) GetGroups() (*GroupsResult, *Response, error) {
 	return s.GetGroupsWithContext(context.Background())
 }
@@ -267,7 +268,7 @@ type AddGroupsResult struct {
 	Expand string `json:"expand"`
 }
 
-// Get wraps GetWithContext using the background context.
+// AddGroup Get wraps GetWithContext using the background context.
 func (s *GroupService) AddGroup(name string) (*AddGroupsResult, *Response, error) {
 	return s.AddGroupsWithContext(context.Background(), name)
 }

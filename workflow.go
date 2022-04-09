@@ -28,7 +28,7 @@ func (s *UserService) GetWorkflow() (*[]Workflow, *Response, error) {
 	return workflow, resp, nil
 }
 
-// Not a REST api  - requires websudo disabled
+// SaveWorkflow Not a REST api  - requires websudo disabled
 func (s *UserService) SaveWorkflow(workflow string) error {
 	apiEndpoint := fmt.Sprintf("/secure/admin/workflows/ViewWorkflowXml.jspa?workflowMode=live&workflowName=%s", workflow)
 	//fmt.Println("apiEndpoint: " + apiEndpoint)

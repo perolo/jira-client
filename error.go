@@ -24,7 +24,7 @@ func NewJiraError(resp *Response, httpError error) error {
 		return errors.Wrap(httpError, "No response returned")
 	}
 
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Wrap(err, httpError.Error())

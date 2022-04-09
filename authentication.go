@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -50,7 +51,7 @@ type Session struct {
 
 // AcquireSessionCookieWithContext creates a new session for a user in Jira.
 // Once a session has been successfully created it can be used to access any of Jira's remote APIs and also the web UI by passing the appropriate HTTP Cookie header.
-// The header will by automatically applied to every API request.
+// The header will be automatically applied to every API request.
 // Note that it is generally preferrable to use HTTP BASIC authentication with the REST API.
 // However, this resource may be used to mimic the behaviour of Jira's log-in page (e.g. to display log-in errors to a user).
 //
@@ -90,13 +91,6 @@ func (s *AuthenticationService) AcquireSessionCookieWithContext(ctx context.Cont
 	s.authType = authTypeSession
 
 	return true, nil
-}
-
-// AcquireSessionCookie wraps AcquireSessionCookieWithContext using the background context.
-//
-// Deprecated: Use CookieAuthTransport instead
-func (s *AuthenticationService) AcquireSessionCookie(username, password string) (bool, error) {
-	return s.AcquireSessionCookieWithContext(context.Background(), username, password)
 }
 
 // SetBasicAuth sets username and password for the basic auth against the Jira instance.
@@ -142,7 +136,8 @@ func (s *AuthenticationService) LogoutWithContext(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("error sending the logout request: %s", err)
 	}
-	defer resp.Body.Close()
+	defer Cleanup(resp)
+	//defer resp.Body.Close()
 	if resp.StatusCode != 204 {
 		return fmt.Errorf("the logout was unsuccessful with status %d", resp.StatusCode)
 	}
@@ -154,12 +149,20 @@ func (s *AuthenticationService) LogoutWithContext(ctx context.Context) error {
 
 }
 
-// Logout wraps LogoutWithContext using the background context.
-//
-// Deprecated: Use CookieAuthTransport to create base client.  Logging out is as simple as not using the
-// client anymore
-func (s *AuthenticationService) Logout() error {
-	return s.LogoutWithContext(context.Background())
+func Cleanup(resp *Response) {
+	fmt.Println("Running Cleanup...")
+	err := resp.Body.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func CleanupH(resp *http.Response) {
+	fmt.Println("Running Cleanup...")
+	err := resp.Body.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // GetCurrentUserWithContext gets the details of the current user.
@@ -183,7 +186,7 @@ func (s *AuthenticationService) GetCurrentUserWithContext(ctx context.Context) (
 	if err != nil {
 		return nil, fmt.Errorf("error sending request to get user info : %s", err)
 	}
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("getting user info failed with status : %d", resp.StatusCode)
 	}

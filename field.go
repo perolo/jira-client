@@ -44,7 +44,7 @@ func (s *FieldService) GetListWithContext(ctx context.Context) ([]Field, *Respon
 		return nil, nil, err
 	}
 
-	fieldList := []Field{}
+	var fieldList = make([]Field, 0) // []Field{}
 	resp, err := s.client.Do(req, &fieldList)
 	if err != nil {
 		return nil, resp, NewJiraError(resp, err)
@@ -120,7 +120,7 @@ func (s *FieldService) GetAllCustomFieldsWithContext(ctx context.Context, option
 	return issue, resp, nil
 }
 
-// Get wraps GetWithContext using the background context.
+// GetAllCustomFields Get wraps GetWithContext using the background context.
 func (s *FieldService) GetAllCustomFields(options *FieldOptions) (*CustomFieldsResponseType, *Response, error) {
 	return s.GetAllCustomFieldsWithContext(context.Background(), options)
 }
