@@ -55,20 +55,26 @@ pipeline {
                         archiveArtifacts artifacts: 'report.xml', fingerprint: true
                         junit 'report.xml'
                     }
+                    if (fileExists('coverage.xml')) {
+                        archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
+                        cobertura coberturaReportFile: 'coverage.xml'
+                    }
+                    if (fileExists('golangci-lint.xml')) {
+                        archiveArtifacts artifacts: 'golangci-lint.xml'            
+                        try {
+                            junit 'golangci-lint.xml'
+                        } catch (err) {
+                            echo err.getMessage()
+                            echo "Error detected, but we will continue."
+                            echo "No lint errors found is not an error."
+                        }
+                    }
                 }
-            }
+            }   
         }
     }
     post {
         always {
-                archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
-                cobertura coberturaReportFile: 'coverage.xml'
-                archiveArtifacts artifacts: 'golangci-lint.xml'            
-                junit 'golangci-lint.xml'
         }
     }        
 }
-//            if (fileExists('coverage.xml')) {
-//            }
-//            if (fileExists('golangci-lint.xml')) {
-//            }
