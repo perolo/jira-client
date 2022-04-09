@@ -52,7 +52,7 @@ pipeline {
     post {
         always {
             stage ('Check for existence of files') {
-                agent any # Could be a top-level directive or a stage level directive
+                agent any 
                 steps {
                     script {            
                         if (fileExists('report.xml')) {
