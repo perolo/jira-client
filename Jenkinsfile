@@ -48,30 +48,25 @@ pipeline {
                 }
             }
         }
+        stage('Artifacts') {
+            steps {                
+                if (fileExists('report.xml')) {
+                    archiveArtifacts artifacts: 'report.xml', fingerprint: true
+                    junit 'report.xml'
+                }
+            }
+        }
     }
     post {
         always {
-            stages {  
-            stage ('Check for existence of files') {
-                agent any 
-                steps {
-                    script {            
-                        if (fileExists('report.xml')) {
-                            archiveArtifacts artifacts: 'report.xml', fingerprint: true
-                            junit 'report.xml'
-                        }
-                    }
-                }
-            }
-            }
+                archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
+                cobertura coberturaReportFile: 'coverage.xml'
+                archiveArtifacts artifacts: 'golangci-lint.xml'            
+                junit 'golangci-lint.xml'
         }
     }        
 }
 //            if (fileExists('coverage.xml')) {
-//                archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
-//                cobertura coberturaReportFile: 'coverage.xml'
 //            }
 //            if (fileExists('golangci-lint.xml')) {
-//                archiveArtifacts artifacts: 'golangci-lint.xml'            
-//                junit 'golangci-lint.xml'
 //            }
