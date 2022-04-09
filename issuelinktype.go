@@ -24,7 +24,7 @@ func (s *IssueLinkTypeService) GetListWithContext(ctx context.Context) ([]IssueL
 		return nil, nil, err
 	}
 
-	linkTypeList := []IssueLinkType{}
+	linkTypeList := make([]IssueLinkType, 0) //[]IssueLinkType{}
 	resp, err := s.client.Do(req, &linkTypeList)
 	if err != nil {
 		return nil, resp, NewJiraError(resp, err)
@@ -76,7 +76,7 @@ func (s *IssueLinkTypeService) CreateWithContext(ctx context.Context, linkType *
 	}
 
 	responseLinkType := new(IssueLinkType)
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		e := fmt.Errorf("could not read the returned data")

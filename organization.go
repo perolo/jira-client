@@ -370,8 +370,9 @@ func (s *OrganizationService) AddUsers(organizationID int, users OrganizationUse
 // RemoveUsersWithContext removes users from an organization.
 //
 // https://developer.atlassian.com/cloud/jira/service-desk/rest/api-group-organization/#api-rest-servicedeskapi-organization-organizationid-user-delete
+// func (s *OrganizationService) RemoveUsersWithContext(ctx context.Context, organizationID int, users OrganizationUsersDTO) (*Response, error) {
 // Caller must close resp.Body
-func (s *OrganizationService) RemoveUsersWithContext(ctx context.Context, organizationID int, users OrganizationUsersDTO) (*Response, error) {
+func (s *OrganizationService) RemoveUsersWithContext(ctx context.Context, organizationID int) (*Response, error) {
 	apiEndPoint := fmt.Sprintf("rest/servicedeskapi/organization/%d/user", organizationID)
 
 	req, err := s.client.NewRequestWithContext(ctx, "DELETE", apiEndPoint, nil)
@@ -392,6 +393,7 @@ func (s *OrganizationService) RemoveUsersWithContext(ctx context.Context, organi
 
 // RemoveUsers wraps RemoveUsersWithContext using the background context.
 // Caller must close resp.Body
-func (s *OrganizationService) RemoveUsers(organizationID int, users OrganizationUsersDTO) (*Response, error) {
-	return s.RemoveUsersWithContext(context.Background(), organizationID, users)
+// func (s *OrganizationService) RemoveUsers(organizationID int, users OrganizationUsersDTO) (*Response, error) {
+func (s *OrganizationService) RemoveUsers(organizationID int) (*Response, error) {
+	return s.RemoveUsersWithContext(context.Background(), organizationID)
 }

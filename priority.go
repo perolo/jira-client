@@ -30,7 +30,7 @@ func (s *PriorityService) GetListWithContext(ctx context.Context) ([]Priority, *
 		return nil, nil, err
 	}
 
-	priorityList := []Priority{}
+	priorityList := make([]Priority, 0) // []Priority{}
 	resp, err := s.client.Do(req, &priorityList)
 	if err != nil {
 		return nil, resp, NewJiraError(resp, err)

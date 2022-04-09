@@ -32,7 +32,7 @@ func (s *StatusService) GetAllStatusesWithContext(ctx context.Context) ([]Status
 		return nil, nil, err
 	}
 
-	statusList := []Status{}
+	statusList := make([]Status, 0) //[]Status{}
 	resp, err := s.client.Do(req, &statusList)
 	if err != nil {
 		return nil, resp, NewJiraError(resp, err)

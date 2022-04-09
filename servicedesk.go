@@ -143,7 +143,7 @@ func (s *ServiceDeskService) AddCustomersWithContext(ctx context.Context, servic
 		return resp, NewJiraError(resp, err)
 	}
 
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 	_, _ = io.Copy(ioutil.Discard, resp.Body)
 
 	return resp, nil
@@ -175,7 +175,7 @@ func (s *ServiceDeskService) RemoveCustomersWithContext(ctx context.Context, ser
 		return resp, NewJiraError(resp, err)
 	}
 
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 	_, _ = io.Copy(ioutil.Discard, resp.Body)
 
 	return resp, nil
@@ -211,7 +211,7 @@ func (s *ServiceDeskService) ListCustomersWithContext(ctx context.Context, servi
 	if err != nil {
 		return nil, resp, NewJiraError(resp, err)
 	}
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 
 	customerList := new(CustomerList)
 	if err := json.NewDecoder(resp.Body).Decode(customerList); err != nil {

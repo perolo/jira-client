@@ -37,14 +37,14 @@ type UserGroup struct {
 	Name string `json:"name,omitempty" structs:"name,omitempty"`
 }
 
-type userSearchParam struct {
+type UserSearchParam struct {
 	name  string
 	value string
 }
 
-type userSearch []userSearchParam
+type UserSearchType []UserSearchParam
 
-type userSearchF func(userSearch) userSearch
+type UserSearchF func(UserSearchType) UserSearchType
 
 // GetWithContext gets user info from Jira using its Account Id
 //
@@ -109,7 +109,7 @@ func (s *UserService) CreateWithContext(ctx context.Context, user *User) (*User,
 	}
 
 	responseUser := new(User)
-	defer resp.Body.Close()
+	defer Cleanup(resp)
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		e := fmt.Errorf("could not read the returned data")
@@ -199,57 +199,57 @@ func (s *UserService) GetSelf() (*User, *Response, error) {
 }
 
 // WithMaxResults sets the max results to return
-func WithMaxResults(maxResults int) userSearchF {
-	return func(s userSearch) userSearch {
-		s = append(s, userSearchParam{name: "maxResults", value: fmt.Sprintf("%d", maxResults)})
+func WithMaxResults(maxResults int) UserSearchF {
+	return func(s UserSearchType) UserSearchType {
+		s = append(s, UserSearchParam{name: "maxResults", value: fmt.Sprintf("%d", maxResults)})
 		return s
 	}
 }
 
 // WithStartAt set the start pager
-func WithStartAt(startAt int) userSearchF {
-	return func(s userSearch) userSearch {
-		s = append(s, userSearchParam{name: "startAt", value: fmt.Sprintf("%d", startAt)})
+func WithStartAt(startAt int) UserSearchF {
+	return func(s UserSearchType) UserSearchType {
+		s = append(s, UserSearchParam{name: "startAt", value: fmt.Sprintf("%d", startAt)})
 		return s
 	}
 }
 
 // WithActive sets the active users lookup
-func WithActive(active bool) userSearchF {
-	return func(s userSearch) userSearch {
-		s = append(s, userSearchParam{name: "includeActive", value: fmt.Sprintf("%t", active)})
+func WithActive(active bool) UserSearchF {
+	return func(s UserSearchType) UserSearchType {
+		s = append(s, UserSearchParam{name: "includeActive", value: fmt.Sprintf("%t", active)})
 		return s
 	}
 }
 
 // WithInactive sets the inactive users lookup
-func WithInactive(inactive bool) userSearchF {
-	return func(s userSearch) userSearch {
-		s = append(s, userSearchParam{name: "includeInactive", value: fmt.Sprintf("%t", inactive)})
+func WithInactive(inactive bool) UserSearchF {
+	return func(s UserSearchType) UserSearchType {
+		s = append(s, UserSearchParam{name: "includeInactive", value: fmt.Sprintf("%t", inactive)})
 		return s
 	}
 }
 
 // WithUsername sets the username to search
-func WithUsername(username string) userSearchF {
-	return func(s userSearch) userSearch {
-		s = append(s, userSearchParam{name: "username", value: username})
+func WithUsername(username string) UserSearchF {
+	return func(s UserSearchType) UserSearchType {
+		s = append(s, UserSearchParam{name: "username", value: username})
 		return s
 	}
 }
 
 // WithAccountId sets the account id to search
-func WithAccountId(accountId string) userSearchF {
-	return func(s userSearch) userSearch {
-		s = append(s, userSearchParam{name: "accountId", value: accountId})
+func WithAccountId(accountId string) UserSearchF {
+	return func(s UserSearchType) UserSearchType {
+		s = append(s, UserSearchParam{name: "accountId", value: accountId})
 		return s
 	}
 }
 
 // WithProperty sets the property (Property keys are specified by path) to search
-func WithProperty(property string) userSearchF {
-	return func(s userSearch) userSearch {
-		s = append(s, userSearchParam{name: "property", value: property})
+func WithProperty(property string) UserSearchF {
+	return func(s UserSearchType) UserSearchType {
+		s = append(s, UserSearchParam{name: "property", value: property})
 		return s
 	}
 }
@@ -258,8 +258,8 @@ func WithProperty(property string) userSearchF {
 // It can find users by email or display name using the query parameter
 //
 // Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-rest-api-2-user-search-get
-func (s *UserService) FindWithContext(ctx context.Context, property string, tweaks ...userSearchF) ([]User, *Response, error) {
-	search := []userSearchParam{
+func (s *UserService) FindWithContext(ctx context.Context, property string, tweaks ...UserSearchF) ([]User, *Response, error) {
+	search := []UserSearchParam{
 		{
 			name:  "query",
 			value: property,
@@ -280,7 +280,7 @@ func (s *UserService) FindWithContext(ctx context.Context, property string, twea
 		return nil, nil, err
 	}
 
-	users := []User{}
+	users := make([]User, 0) // []User{}
 	resp, err := s.client.Do(req, &users)
 	if err != nil {
 		return nil, resp, NewJiraError(resp, err)
@@ -289,6 +289,6 @@ func (s *UserService) FindWithContext(ctx context.Context, property string, twea
 }
 
 // Find wraps FindWithContext using the background context.
-func (s *UserService) Find(property string, tweaks ...userSearchF) ([]User, *Response, error) {
+func (s *UserService) Find(property string, tweaks ...UserSearchF) ([]User, *Response, error) {
 	return s.FindWithContext(context.Background(), property, tweaks...)
 }

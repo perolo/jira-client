@@ -94,7 +94,7 @@ type RoleType struct {
 	ID     string
 }
 
-// GetListWithContext returns a list of all available roles for a project
+// GetRolesForProjectWithContext returns a list of all available roles for a project
 // /rest/api/2/project/{projectIdOrKey}/role
 // JIRA API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v3/#api-api-3-role-get
 func (s *RoleService) GetRolesForProjectWithContext(ctx context.Context, proj string) (*[]RoleType, *Response, error) {
@@ -126,7 +126,7 @@ func (s *RoleService) GetRolesForProjectWithContext(ctx context.Context, proj st
 	return &rl, nil, err
 }
 
-// /rest/api/2/project/{projectIdOrKey}/role/{id}
+// GetActorsForProjectRoleWithContext /rest/api/2/project/{projectIdOrKey}/role/{id}
 func (s *RoleService) GetActorsForProjectRoleWithContext(ctx context.Context, proj string, roleid string) (*Role, *Response, error) {
 	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role/%s", proj, roleid)
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
@@ -146,7 +146,7 @@ type GroupAddType struct {
 	Group []string `json:"group"`
 }
 
-// /rest/api/2/project/{projectIdOrKey}/role/{id}
+// AddActorsForProjectRoleWithContext /rest/api/2/project/{projectIdOrKey}/role/{id}
 func (s *RoleService) AddActorsForProjectRoleWithContext(ctx context.Context, proj string, roleid string, actor string) (*Role, *Response, error) {
 	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role/%s", proj, roleid)
 	var payload = new(GroupAddType)
@@ -180,7 +180,7 @@ type GroupRemoveType struct {
 	User []string `json:"user"`
 }
 
-// DELETE /rest/project/{projectIdOrKey}/role/{id}
+// RemoveUserActorsForProjectRole DELETE /rest/project/{projectIdOrKey}/role/{id}
 func (s *RoleService) RemoveUserActorsForProjectRole(proj string, roleid int, user string) (*Role, *Response, error) {
 	ctx := context.Background()
 	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role/%v?user=%s", proj, roleid, user)

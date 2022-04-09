@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt"
 	"github.com/google/go-querystring/query"
 	"github.com/pkg/errors"
 )
@@ -162,7 +162,7 @@ func (c *Client) NewRawRequest(method, urlStr string, body io.Reader) (*http.Req
 	return c.NewRawRequestWithContext(context.Background(), method, urlStr, body)
 }
 
-/* Unused - staticcheck
+/* formatRequest Unused - staticcheck
 func formatRequest(r *http.Request) string {
 	// Create return string
 	var request []string
@@ -189,6 +189,7 @@ func formatRequest(r *http.Request) string {
 	return strings.Join(request, "\n")
 }
 */
+
 // NewRequestWithContext creates an API request.
 // A relative URL can be provided in urlStr, in which case it is resolved relative to the baseURL of the Client.
 // If specified, the value pointed to by body is JSON encoded and included as the request body.
@@ -325,7 +326,7 @@ func (c *Client) Do(req *http.Request, v interface{}) (*Response, error) {
 
 	if v != nil {
 		// Open a NewDecoder and defer closing the reader only if there is a provided interface to decode to
-		defer httpResp.Body.Close()
+		defer CleanupH(httpResp)
 		/*		if Debug {
 				body, _ := ioutil.ReadAll(httpResp.Body)
 				fmt.Printf("resp: %v\n", string(body))
@@ -352,7 +353,7 @@ func (c *Client) Do2(req *http.Request) ([]byte, error) {
 		return nil, err
 	}
 
-	defer httpResp.Body.Close()
+	defer CleanupH(httpResp)
 	body, _ = ioutil.ReadAll(httpResp.Body)
 	//	fmt.Printf("resp: %v\n", string(body))
 	//	resp := newResponse(httpResp, v)
@@ -373,12 +374,12 @@ func (c *Client) Save(req *http.Request, filename string) error {
 	}
 
 	// Open a NewDecoder and defer closing the reader only if there is a provided interface to decode to
-	defer httpResp.Body.Close()
+	defer CleanupH(httpResp)
 	body, err := ioutil.ReadAll(httpResp.Body)
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile(filename, body, 0600)
+	err = ioutil.WriteFile(filename, body, 0600)
 
 	return err
 }
@@ -602,7 +603,7 @@ func (t *CookieAuthTransport) setSessionObject() error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer CleanupH(resp)
 
 	t.SessionObject = resp.Cookies()
 	return nil
@@ -619,7 +620,10 @@ func (t *CookieAuthTransport) buildAuthRequest() (*http.Request, error) {
 	}
 
 	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(body)
+	err := json.NewEncoder(b).Encode(body)
+	if err != nil {
+		return nil, err
+	}
 
 	req, err := http.NewRequest("POST", t.AuthURL, b)
 	if err != nil {
