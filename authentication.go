@@ -115,6 +115,8 @@ func (s *AuthenticationService) Authenticated() bool {
 	return false
 }
 
+/*
+
 // LogoutWithContext logs out the current user that has been authenticated and the session in the client is destroyed.
 //
 // Jira API docs: https://docs.atlassian.com/jira/REST/latest/#auth/1/session
@@ -149,8 +151,12 @@ func (s *AuthenticationService) LogoutWithContext(ctx context.Context) error {
 
 }
 
+func (s *AuthenticationService) Logout() error {
+	return s.LogoutWithContext(context.Background())
+}
+*/
 func Cleanup(resp *Response) {
-	fmt.Println("Running Cleanup...")
+	// fmt.Println("Running Cleanup...")
 	err := resp.Body.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -158,7 +164,7 @@ func Cleanup(resp *Response) {
 }
 
 func CleanupH(resp *http.Response) {
-	fmt.Println("Running Cleanup...")
+	// fmt.Println("Running Cleanup...")
 	err := resp.Body.Close()
 	if err != nil {
 		log.Fatal(err)
