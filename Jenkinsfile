@@ -51,6 +51,7 @@ pipeline {
     }
     post {
         always {
+            stages {  
             stage ('Check for existence of files') {
                 agent any 
                 steps {
@@ -61,6 +62,7 @@ pipeline {
                         }
                     }
                 }
+            }
             }
         }
     }        
