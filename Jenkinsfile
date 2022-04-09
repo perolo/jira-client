@@ -51,12 +51,18 @@ pipeline {
     }
     post {
         always {
-            archiveArtifacts artifacts: 'report.xml', fingerprint: true
-            archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
-            archiveArtifacts artifacts: 'golangci-lint.xml'            
-            junit 'report.xml'
-            junit 'golangci-lint.xml'
-            cobertura coberturaReportFile: 'coverage.xml'
+            if (fileExists('report.xml')) {
+                archiveArtifacts artifacts: 'report.xml', fingerprint: true
+                junit 'report.xml'
+            }
+            if (fileExists('coverage.xml')) {
+                archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
+                cobertura coberturaReportFile: 'coverage.xml'
+            }
+            if (fileExists('golangci-lint.xml')) {
+                archiveArtifacts artifacts: 'golangci-lint.xml'            
+                junit 'golangci-lint.xml'
+            }
         }
     }        
 }
