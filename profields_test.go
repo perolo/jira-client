@@ -42,7 +42,7 @@ func TestProfieldsService_GetFields(t *testing.T) {
 func TestProfieldsService_GetProjectField(t *testing.T) {
 	setup()
 	defer teardown()
-//	testAPIEndpoint := "/rest/profields/api/2.0/fields"
+	//	testAPIEndpoint := "/rest/profields/api/2.0/fields"
 	projkey := "STP"
 	fieldid := -2
 	testAPIEndpoint := fmt.Sprintf("/rest/profields/api/2.0/values/projects/%s/fields/%v", projkey, fieldid)
@@ -70,8 +70,7 @@ func TestProfieldsService_GetProjectField(t *testing.T) {
 		}
 	}
 	if err != nil {
-		t.Errorf("Error given: "+ err.Error())
+		t.Errorf("Error given: " + err.Error())
 
 	}
 }
-

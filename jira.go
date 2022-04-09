@@ -599,11 +599,11 @@ func (t *CookieAuthTransport) setSessionObject() error {
 	var authClient = &http.Client{
 		Timeout: time.Second * 60,
 	}
-	resp, err := authClient.Do(req)
-	if err != nil {
-		return err
-	}
+	resp, err2 := authClient.Do(req) //nolint:bodyclose
 	defer CleanupH(resp)
+	if err2 != nil {
+		return err2
+	}
 
 	t.SessionObject = resp.Cookies()
 	return nil
@@ -625,9 +625,9 @@ func (t *CookieAuthTransport) buildAuthRequest() (*http.Request, error) {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", t.AuthURL, b)
-	if err != nil {
-		return nil, err
+	req, err2 := http.NewRequest("POST", t.AuthURL, b)
+	if err2 != nil {
+		return nil, err2
 	}
 
 	req.Header.Set("Content-Type", "application/json")

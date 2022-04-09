@@ -2,6 +2,7 @@ package jira
 
 import (
 	"context"
+
 	"github.com/google/go-querystring/query"
 )
 
@@ -103,9 +104,9 @@ func (s *FieldService) GetAllCustomFieldsWithContext(ctx context.Context, option
 	}
 
 	if options != nil {
-		q, err := query.Values(options)
-		if err != nil {
-			return nil, nil, err
+		q, err2 := query.Values(options)
+		if err2 != nil {
+			return nil, nil, err2
 		}
 		req.URL.RawQuery = q.Encode()
 	}

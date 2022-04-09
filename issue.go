@@ -685,9 +685,9 @@ func (s *IssueService) GetWithContext(ctx context.Context, issueID string, optio
 	}
 
 	if options != nil {
-		q, err := query.Values(options)
-		if err != nil {
-			return nil, nil, err
+		q, err2 := query.Values(options)
+		if err2 != nil {
+			return nil, nil, err2
 		}
 		req.URL.RawQuery = q.Encode()
 	}
@@ -1606,7 +1606,7 @@ func (s *IssueService) UpdateAssignee(issueID string, assignee *User) (*Response
 func (c ChangelogHistory) CreatedTime() (time.Time, error) {
 	var t time.Time
 	// Ignore null
-	if string(c.Created) == "null" {
+	if c.Created == "null" {
 		return t, nil
 	}
 	t, err := time.Parse("2006-01-02T15:04:05.999-0700", c.Created)

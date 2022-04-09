@@ -15,7 +15,10 @@ func TestOrganizationService_GetAllOrganizationsWithContext(t *testing.T) {
 		testRequestURL(t, r, "/rest/servicedeskapi/organization")
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, `{ "_expands": [], "size": 1, "start": 1, "limit": 1, "isLastPage": false, "_links": { "base": "https://your-domain.atlassian.net/rest/servicedeskapi", "context": "context", "next": "https://your-domain.atlassian.net/rest/servicedeskapi/organization?start=2&limit=1", "prev": "https://your-domain.atlassian.net/rest/servicedeskapi/organization?start=0&limit=1" }, "values": [ { "id": "1", "name": "Charlie Cakes Franchises", "_links": { "self": "https://your-domain.atlassian.net/rest/servicedeskapi/organization/1" } } ] }`)
+		_, err := fmt.Fprint(w, `{ "_expands": [], "size": 1, "start": 1, "limit": 1, "isLastPage": false, "_links": { "base": "https://your-domain.atlassian.net/rest/servicedeskapi", "context": "context", "next": "https://your-domain.atlassian.net/rest/servicedeskapi/organization?start=2&limit=1", "prev": "https://your-domain.atlassian.net/rest/servicedeskapi/organization?start=0&limit=1" }, "values": [ { "id": "1", "name": "Charlie Cakes Franchises", "_links": { "self": "https://your-domain.atlassian.net/rest/servicedeskapi/organization/1" } } ] }`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	result, _, err := testClient.Organization.GetAllOrganizations(0, 50, "")
@@ -39,9 +42,15 @@ func TestOrganizationService_CreateOrganization(t *testing.T) {
 		testRequestURL(t, r, "/rest/servicedeskapi/organization")
 
 		o := new(OrganizationCreationDTO)
-		json.NewDecoder(r.Body).Decode(&o)
+		err := json.NewDecoder(r.Body).Decode(&o)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(w, `{ "id": "1", "name": "%s", "_links": { "self": "https://your-domain.atlassian.net/rest/servicedeskapi/organization/1" } }`, o.Name)
+		_, err = fmt.Fprintf(w, `{ "id": "1", "name": "%s", "_links": { "self": "https://your-domain.atlassian.net/rest/servicedeskapi/organization/1" } }`, o.Name)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	name := "MyOrg"
@@ -66,7 +75,10 @@ func TestOrganizationService_GetOrganization(t *testing.T) {
 		testRequestURL(t, r, "/rest/servicedeskapi/organization/1")
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{ "id": "1", "name": "name", "_links": { "self": "https://your-domain.atlassian.net/rest/servicedeskapi/organization/1" } }`)
+		_, err := fmt.Fprintf(w, `{ "id": "1", "name": "name", "_links": { "self": "https://your-domain.atlassian.net/rest/servicedeskapi/organization/1" } }`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	id := 1
@@ -108,7 +120,7 @@ func TestOrganizationService_GetPropertiesKeys(t *testing.T) {
 		testRequestURL(t, r, "/rest/servicedeskapi/organization/1/property")
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{
+		_, err := fmt.Fprintf(w, `{
 			"keys": [
 			  {
 				"self": "/rest/servicedeskapi/organization/1/property/propertyKey",
@@ -116,6 +128,9 @@ func TestOrganizationService_GetPropertiesKeys(t *testing.T) {
 			  }
 			]
 		  }`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	pk, _, err := testClient.Organization.GetPropertiesKeys(1)
@@ -139,13 +154,17 @@ func TestOrganizationService_GetProperty(t *testing.T) {
 		testRequestURL(t, r, "/rest/servicedeskapi/organization/1/property/organization.attributes")
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{
+		_, err := fmt.Fprintf(w, `{
 			"key": "organization.attributes",
 			"value": {
 			  "phone": "0800-1233456789",
 			  "mail": "charlie@example.com"
 			}
 		  }`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
+
 	})
 
 	key := "organization.attributes"
@@ -206,7 +225,7 @@ func TestOrganizationService_GetUsers(t *testing.T) {
 		testRequestURL(t, r, "/rest/servicedeskapi/organization/1/user")
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, `{
+		_, err := fmt.Fprintf(w, `{
 			"_expands": [],
 			"size": 1,
 			"start": 1,
@@ -259,6 +278,9 @@ func TestOrganizationService_GetUsers(t *testing.T) {
 			  }
 			]
 		  }`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	users, _, err := testClient.Organization.GetUsers(1, 0, 50)

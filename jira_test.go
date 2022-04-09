@@ -365,12 +365,18 @@ func TestClient_Do(t *testing.T) {
 		if m := "GET"; m != r.Method {
 			t.Errorf("Request method = %v, want %v", r.Method, m)
 		}
-		fmt.Fprint(w, `{"A":"a"}`)
+		_, err := fmt.Fprint(w, `{"A":"a"}`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	req, _ := testClient.NewRequest("GET", "/", nil)
 	body := new(foo)
-	testClient.Do(req, body)
+	_, err := testClient.Do(req, body)
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
 
 	want := &foo{"a"}
 	if !reflect.DeepEqual(body, want) {
@@ -386,7 +392,10 @@ func TestClient_Do_HTTPResponse(t *testing.T) {
 		if m := "GET"; m != r.Method {
 			t.Errorf("Request method = %v, want %v", r.Method, m)
 		}
-		fmt.Fprint(w, `{"A":"a"}`)
+		_, err := fmt.Fprint(w, `{"A":"a"}`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	req, _ := testClient.NewRequest("GET", "/", nil)
@@ -482,7 +491,10 @@ func TestBasicAuthTransport(t *testing.T) {
 
 	basicAuthClient, _ := NewClient(tp.Client(), testServer.URL)
 	req, _ := basicAuthClient.NewRequest("GET", ".", nil)
-	basicAuthClient.Do(req, nil)
+	_, err := basicAuthClient.Do(req, nil)
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
 }
 
 func TestBasicAuthTransport_transport(t *testing.T) {
@@ -533,7 +545,10 @@ func TestCookieAuthTransport_SessionObject_Exists(t *testing.T) {
 
 	basicAuthClient, _ := NewClient(tp.Client(), testServer.URL)
 	req, _ := basicAuthClient.NewRequest("GET", ".", nil)
-	basicAuthClient.Do(req, nil)
+	_, err := basicAuthClient.Do(req, nil)
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
 }
 
 // Test that an empty cookie in the transport is not returned in the header
@@ -569,7 +584,10 @@ func TestCookieAuthTransport_SessionObject_ExistsWithEmptyCookie(t *testing.T) {
 
 	basicAuthClient, _ := NewClient(tp.Client(), testServer.URL)
 	req, _ := basicAuthClient.NewRequest("GET", ".", nil)
-	basicAuthClient.Do(req, nil)
+	_, err := basicAuthClient.Do(req, nil)
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
 }
 
 // Test that if no cookie is in the transport, it checks for a cookie
@@ -582,7 +600,10 @@ func TestCookieAuthTransport_SessionObject_DoesNotExist(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		http.SetCookie(w, testCookie)
-		w.Write([]byte(`OK`))
+		_, err := w.Write([]byte(`OK`))
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -610,7 +631,10 @@ func TestCookieAuthTransport_SessionObject_DoesNotExist(t *testing.T) {
 
 	basicAuthClient, _ := NewClient(tp.Client(), testServer.URL)
 	req, _ := basicAuthClient.NewRequest("GET", ".", nil)
-	basicAuthClient.Do(req, nil)
+	_, err := basicAuthClient.Do(req, nil)
+	if err != nil {
+		t.Errorf("Error given: %s", err)
+	}
 }
 
 func TestJWTAuthTransport_HeaderContainsJWT(t *testing.T) {
@@ -634,7 +658,12 @@ func TestJWTAuthTransport_HeaderContainsJWT(t *testing.T) {
 	})
 
 	jwtClient, _ := NewClient(jwtTransport.Client(), testServer.URL)
-	jwtClient.Issue.Get("TEST-1", nil)
+	_, _, err := jwtClient.Issue.Get("TEST-1", nil)
+	if err != nil {
+		if err.Error() != "200 OK: : EOF" {
+			t.Errorf("Error given: %s", err.Error())
+		}
+	}
 }
 
 func TestPATAuthTransport_HeaderContainsAuth(t *testing.T) {
@@ -656,6 +685,11 @@ func TestPATAuthTransport_HeaderContainsAuth(t *testing.T) {
 	})
 
 	client, _ := NewClient(patTransport.Client(), testServer.URL)
-	client.User.GetSelf()
+	_, _, err := client.User.GetSelf()
+	if err != nil {
+		if err.Error() != "200 OK: : EOF" {
+			t.Errorf("Error given: %s", err.Error())
+		}
+	}
 
 }
