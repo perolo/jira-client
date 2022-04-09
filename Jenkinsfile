@@ -19,6 +19,7 @@ pipeline {
                 sh 'go install github.com/jstemmer/go-junit-report@latest'
                 sh 'go install github.com/axw/gocov/gocov@latest'
                 sh 'go install github.com/AlekSi/gocov-xml@latest'
+                sh 'go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest'
             }
         }
         
@@ -32,10 +33,14 @@ pipeline {
         stage('Test') {
             steps {
                 withEnv(["PATH+GO=${GOPATH}/bin"]){
-                    echo 'Running vetting'
-                    sh 'go vet .'
-                    //echo 'Running staticcheck'
-                    sh 'staticcheck ./...'
+                    catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE', message: 'Static codecheck errors!') {
+                        echo 'Running vetting'
+                        sh 'go vet .'
+                        echo 'Running staticcheck'
+                        sh 'staticcheck ./...'
+                        echo 'Running golangci-lint'
+                        sh 'golangci-lint run --out-format junit-xml --config .golangci.yml > golangci-lint.xml'
+                    }
                     echo 'Running test'
                     sh 'go test -v 2>&1 | go-junit-report > report.xml'
                     echo 'Running coverage'
@@ -48,7 +53,9 @@ pipeline {
         always {
             archiveArtifacts artifacts: 'report.xml', fingerprint: true
             archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
+            archiveArtifacts artifacts: 'golangci-lint.xml'            
             junit 'report.xml'
+            junit 'golangci-lint.xml'
             cobertura coberturaReportFile: 'coverage.xml'
         }
     }        
