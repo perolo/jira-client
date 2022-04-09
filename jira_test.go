@@ -250,11 +250,16 @@ func TestClient_NewRequest_SessionCookies(t *testing.T) {
 }
 
 func TestClient_NewRequest_BasicAuth(t *testing.T) {
-	c, err := NewClient(nil, testJiraInstanceURL)
+
+	tp := BasicAuthTransport{
+		Username: strings.TrimSpace("test-user"),
+		Password: strings.TrimSpace("test-password"),
+	}
+
+	c, err := NewClient(tp.Client(), testJiraInstanceURL)
 	if err != nil {
 		t.Errorf("An error occurred. Expected nil. Got %+v.", err)
 	}
-
 	c.Authentication.SetBasicAuth("test-user", "test-password")
 
 	inURL := "rest/api/2/issue/"

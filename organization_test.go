@@ -310,14 +310,15 @@ func TestOrganizationService_RemoveUsers(t *testing.T) {
 
 		w.WriteHeader(http.StatusNoContent)
 	})
-
-	users := OrganizationUsersDTO{
-		AccountIds: []string{
-			"qm:a713c8ea-1075-4e30-9d96-891a7d181739:5ad6d3581db05e2a66fa80b",
-			"qm:a713c8ea-1075-4e30-9d96-891a7d181739:5ad6d3a01db05e2a66fa80bd",
-		},
-	}
-	_, err := testClient.Organization.RemoveUsers(1, users)
+	/*
+		users := OrganizationUsersDTO{
+			AccountIds: []string{
+				"qm:a713c8ea-1075-4e30-9d96-891a7d181739:5ad6d3581db05e2a66fa80b",
+				"qm:a713c8ea-1075-4e30-9d96-891a7d181739:5ad6d3a01db05e2a66fa80bd",
+			},
+		}
+	*/
+	_, err := testClient.Organization.RemoveUsers(1)
 
 	if err != nil {
 		t.Errorf("Error given: %s", err)

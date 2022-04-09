@@ -1,14 +1,10 @@
 package jira
 
 import (
-	"bytes"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"reflect"
 	"testing"
 )
 
+/*
 func TestAuthenticationService_AcquireSessionCookie_Failure(t *testing.T) {
 	setup()
 	defer teardown()
@@ -79,6 +75,7 @@ func TestAuthenticationService_AcquireSessionCookie_Success(t *testing.T) {
 		t.Errorf("Expected authType %d. Got %d", authTypeSession, testClient.Authentication.authType)
 	}
 }
+*/
 
 func TestAuthenticationService_SetBasicAuth(t *testing.T) {
 	setup()
@@ -133,6 +130,7 @@ func TestAuthenticationService_Authenticated_WithBasicAuthButNoUsername(t *testi
 	}
 }
 
+/*
 func TestAuthenticationService_GetUserInfo_AccessForbidden_Fail(t *testing.T) {
 	setup()
 	defer teardown()
@@ -207,6 +205,7 @@ func TestAuthenticationService_GetUserInfo_NonOkStatusCode_Fail(t *testing.T) {
 		t.Errorf("Non nil error expect, received nil")
 	}
 }
+*/
 
 func TestAuthenticationService_GetUserInfo_FailWithoutLogin(t *testing.T) {
 	// no setup() required here
@@ -218,6 +217,7 @@ func TestAuthenticationService_GetUserInfo_FailWithoutLogin(t *testing.T) {
 	}
 }
 
+/*
 func TestAuthenticationService_GetUserInfo_Success(t *testing.T) {
 	setup()
 	defer teardown()
@@ -267,7 +267,9 @@ func TestAuthenticationService_GetUserInfo_Success(t *testing.T) {
 		t.Error("The user information doesn't match")
 	}
 }
+*/
 
+/*
 func TestAuthenticationService_Logout_Success(t *testing.T) {
 	setup()
 	defer teardown()
@@ -303,7 +305,8 @@ func TestAuthenticationService_Logout_Success(t *testing.T) {
 		t.Errorf("Expected nil error, got %s", err)
 	}
 }
-
+*/
+/*
 func TestAuthenticationService_Logout_FailWithoutLogin(t *testing.T) {
 	setup()
 	defer teardown()
@@ -319,3 +322,4 @@ func TestAuthenticationService_Logout_FailWithoutLogin(t *testing.T) {
 		t.Error("Expected not nil, got nil")
 	}
 }
+*/
