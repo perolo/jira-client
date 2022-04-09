@@ -51,18 +51,25 @@ pipeline {
     }
     post {
         always {
-            if (fileExists('report.xml')) {
-                archiveArtifacts artifacts: 'report.xml', fingerprint: true
-                junit 'report.xml'
-            }
-            if (fileExists('coverage.xml')) {
-                archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
-                cobertura coberturaReportFile: 'coverage.xml'
-            }
-            if (fileExists('golangci-lint.xml')) {
-                archiveArtifacts artifacts: 'golangci-lint.xml'            
-                junit 'golangci-lint.xml'
+            stage ('Check for existence of files') {
+                agent any # Could be a top-level directive or a stage level directive
+                steps {
+                    script {            
+                        if (fileExists('report.xml')) {
+                            archiveArtifacts artifacts: 'report.xml', fingerprint: true
+                            junit 'report.xml'
+                        }
+                    }
+                }
             }
         }
     }        
 }
+//            if (fileExists('coverage.xml')) {
+//                archiveArtifacts artifacts: 'coverage.xml', fingerprint: true
+//                cobertura coberturaReportFile: 'coverage.xml'
+//            }
+//            if (fileExists('golangci-lint.xml')) {
+//                archiveArtifacts artifacts: 'golangci-lint.xml'            
+//                junit 'golangci-lint.xml'
+//            }
