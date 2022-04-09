@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 )
 
@@ -95,7 +96,7 @@ func (s *AuthenticationService) AcquireSessionCookieWithContext(ctx context.Cont
 
 // SetBasicAuth sets username and password for the basic auth against the Jira instance.
 //
-// Deprecated: Use BasicAuthTransport instead
+// Noteprecated: Use BasicAuthTransport instead
 func (s *AuthenticationService) SetBasicAuth(username, password string) {
 	s.username = username
 	s.password = password
@@ -155,6 +156,7 @@ func (s *AuthenticationService) Logout() error {
 	return s.LogoutWithContext(context.Background())
 }
 */
+
 func Cleanup(resp *Response) {
 	// fmt.Println("Running Cleanup...")
 	err := resp.Body.Close()
@@ -166,6 +168,13 @@ func Cleanup(resp *Response) {
 func CleanupH(resp *http.Response) {
 	// fmt.Println("Running Cleanup...")
 	err := resp.Body.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+func CleanupF(file multipart.File) {
+	// fmt.Println("Running Cleanup...")
+	err := file.Close()
 	if err != nil {
 		log.Fatal(err)
 	}

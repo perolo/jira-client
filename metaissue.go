@@ -67,9 +67,9 @@ func (s *IssueService) GetCreateMetaWithOptionsWithContext(ctx context.Context, 
 		return nil, nil, err
 	}
 	if options != nil {
-		q, err := query.Values(options)
-		if err != nil {
-			return nil, nil, err
+		q, err2 := query.Values(options)
+		if err2 != nil {
+			return nil, nil, err2
 		}
 		req.URL.RawQuery = q.Encode()
 	}

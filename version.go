@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/google/go-querystring/query"
 	"io/ioutil"
 )
@@ -130,9 +131,9 @@ func (s *VersionService) GetRelatedIssueCounts(versionID string, options *GetQue
 	}
 
 	if options != nil {
-		q, err := query.Values(options)
-		if err != nil {
-			return nil, nil, err
+		q, err2 := query.Values(options)
+		if err2 != nil {
+			return nil, nil, err2
 		}
 		req.URL.RawQuery = q.Encode()
 	}
@@ -160,9 +161,9 @@ func (s *VersionService) GetIssuesUnresolvedCount(versionID string, options *Get
 	}
 
 	if options != nil {
-		q, err := query.Values(options)
-		if err != nil {
-			return nil, nil, err
+		q, err2 := query.Values(options)
+		if err2 != nil {
+			return nil, nil, err2
 		}
 		req.URL.RawQuery = q.Encode()
 	}

@@ -10,11 +10,11 @@ linters-settings:
   dupl:
     threshold: 100
   funlen:
-    lines: 100
+    lines: 500
     statements: 50
   goconst:
     min-len: 2
-    min-occurrences: 3
+    min-occurrences: 10
   gocritic:
     enabled-tags:
       - diagnostic
@@ -29,7 +29,7 @@ linters-settings:
       - whyNoLint
       - wrapperFunc
   gocyclo:
-    min-complexity: 15
+    min-complexity: 25
   goimports:
     local-prefixes: github.com/golangci/golangci-lint
   gomnd:
@@ -73,27 +73,20 @@ linters:
     - deadcode
     - depguard
     - dogsled
-    - dupl
     - errcheck
     - exportloopref
     - funlen
     - gochecknoinits
     - goconst
     - gocyclo
-    - gofmt
-    - goimports
-    - gomnd
     - goprintffuncname
-    - gosec
     - gosimple
     - govet
     - ineffassign
     - nakedret
-    - noctx
     - nolintlint
     - staticcheck
     - structcheck
-    - stylecheck
     - typecheck
     - unconvert
     - unparam
@@ -105,6 +98,15 @@ linters:
   #  - whitespace
   #  - unused
   #  - gocritic
+  #  - gomnd
+  #  - gosec
+  #  - dupl
+  #  - goimports
+  #  - stylecheck
+  #  - gofmt
+
+  #  - noctx
+
 
   # - asciicheck
   # - scopelint

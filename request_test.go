@@ -37,7 +37,7 @@ func TestRequestService_Create(t *testing.T) {
 		gotRequester = payload.Requester
 		gotParticipants = payload.Participants
 
-		w.Write([]byte(`{
+		_, err := w.Write([]byte(`{
 		  "_expands": [
 			"participant",
 			"status",
@@ -109,6 +109,9 @@ func TestRequestService_Create(t *testing.T) {
 			"agent": "https://your-domain.atlassian.net/browse/HELPDESK-1"
 		  }
 		}`))
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	request := &Request{
@@ -148,7 +151,7 @@ func TestRequestService_CreateComment(t *testing.T) {
 		testMethod(t, r, "POST")
 		testRequestURL(t, r, "/rest/servicedeskapi/request/HELPDESK-1/comment")
 
-		w.Write([]byte(`{
+		_, err := w.Write([]byte(`{
 		  "_expands": [
 			"attachment",
 			"renderedBody"
@@ -185,6 +188,9 @@ func TestRequestService_CreateComment(t *testing.T) {
 			"self": "https://your-domain.atlassian.net/rest/servicedeskapi/request/2000/comment/1000"
 		  }
 		}`))
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	comment := &RequestComment{

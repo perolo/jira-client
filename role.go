@@ -110,7 +110,7 @@ func (s *RoleService) GetRolesForProjectWithContext(ctx context.Context, proj st
 		return nil, nil, nil
 	}
 	var doc interface{}
-	if err := json.Unmarshal(resp, &doc); err != nil {
+	if err2 := json.Unmarshal(resp, &doc); err2 != nil {
 		return nil, nil, nil
 	}
 	// Should be a better way of doing this:

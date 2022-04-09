@@ -18,7 +18,7 @@ func TestServiceDeskService_GetOrganizations(t *testing.T) {
 		testRequestURL(t, r, "/rest/servicedeskapi/servicedesk/10001/organization")
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, `{
+		_, err := fmt.Fprint(w, `{
 			"_expands": [],
 			"size": 3,
 			"start": 3,
@@ -54,6 +54,9 @@ func TestServiceDeskService_GetOrganizations(t *testing.T) {
 			  }
 			]
 		  }`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	orgs, _, err := testClient.ServiceDesk.GetOrganizations(10001, 3, 3, "")
@@ -111,7 +114,7 @@ func TestServiceDeskServiceStringServiceDeskID_GetOrganizations(t *testing.T) {
 		testRequestURL(t, r, "/rest/servicedeskapi/servicedesk/TEST/organization")
 
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, `{
+		_, err := fmt.Fprint(w, `{
 			"_expands": [],
 			"size": 3,
 			"start": 3,
@@ -147,6 +150,9 @@ func TestServiceDeskServiceStringServiceDeskID_GetOrganizations(t *testing.T) {
 			  }
 			]
 		  }`)
+		if err != nil {
+			t.Errorf("Error given: %s", err)
+		}
 	})
 
 	orgs, _, err := testClient.ServiceDesk.GetOrganizations("TEST", 3, 3, "")
@@ -373,7 +379,7 @@ func TestServiceDeskService_ListCustomers(t *testing.T) {
 					gotOptions.Limit, _ = strconv.Atoi(limit)
 				}
 
-				w.Write([]byte(`{
+				_, err := w.Write([]byte(`{
 				  "_expands": [],
 				  "size": 1,
 				  "start": 1,
@@ -407,6 +413,9 @@ func TestServiceDeskService_ListCustomers(t *testing.T) {
 					}
 				  ]
 				}`))
+				if err != nil {
+					t.Errorf("Error given: %s", err)
+				}
 			})
 
 			customerList, _, err := testClient.ServiceDesk.ListCustomers(test.serviceDeskID, wantOptions)

@@ -49,8 +49,8 @@ type UserSearchF func(UserSearchType) UserSearchType
 // GetWithContext gets user info from Jira using its Account Id
 //
 // Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-rest-api-2-user-get
-func (s *UserService) GetWithContext(ctx context.Context, accountId string) (*User, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/user?accountId=%s", accountId)
+func (s *UserService) GetWithContext(ctx context.Context, accountID string) (*User, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/user?accountId=%s", accountID)
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
@@ -65,12 +65,12 @@ func (s *UserService) GetWithContext(ctx context.Context, accountId string) (*Us
 }
 
 // Get wraps GetWithContext using the background context.
-func (s *UserService) Get(accountId string) (*User, *Response, error) {
-	return s.GetWithContext(context.Background(), accountId)
+func (s *UserService) Get(accountID string) (*User, *Response, error) {
+	return s.GetWithContext(context.Background(), accountID)
 }
 
 // GetByAccountIDWithContext gets user info from Jira
-// Searching by another parameter that is not accountId is deprecated,
+// Searching by another parameter that is not accountID is deprecated,
 // but this method is kept for backwards compatibility
 // Jira API docs: https://docs.atlassian.com/jira/REST/cloud/#api/2/user-getUser
 func (s *UserService) GetByAccountIDWithContext(ctx context.Context, accountID string) (*User, *Response, error) {
@@ -133,8 +133,8 @@ func (s *UserService) Create(user *User) (*User, *Response, error) {
 //
 // Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-rest-api-2-user-delete
 // Caller must close resp.Body
-func (s *UserService) DeleteWithContext(ctx context.Context, accountId string) (*Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/user?accountId=%s", accountId)
+func (s *UserService) DeleteWithContext(ctx context.Context, accountID string) (*Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/user?accountId=%s", accountID)
 	req, err := s.client.NewRequestWithContext(ctx, "DELETE", apiEndpoint, nil)
 	if err != nil {
 		return nil, err
@@ -149,15 +149,15 @@ func (s *UserService) DeleteWithContext(ctx context.Context, accountId string) (
 
 // Delete wraps DeleteWithContext using the background context.
 // Caller must close resp.Body
-func (s *UserService) Delete(accountId string) (*Response, error) {
-	return s.DeleteWithContext(context.Background(), accountId)
+func (s *UserService) Delete(accountID string) (*Response, error) {
+	return s.DeleteWithContext(context.Background(), accountID)
 }
 
 // GetGroupsWithContext returns the groups which the user belongs to
 //
 // Jira API docs: https://developer.atlassian.com/cloud/jira/platform/rest/v2/#api-rest-api-2-user-groups-get
-func (s *UserService) GetGroupsWithContext(ctx context.Context, accountId string) (*[]UserGroup, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/user/groups?accountId=%s", accountId)
+func (s *UserService) GetGroupsWithContext(ctx context.Context, accountID string) (*[]UserGroup, *Response, error) {
+	apiEndpoint := fmt.Sprintf("/rest/api/2/user/groups?accountId=%s", accountID)
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
@@ -172,8 +172,8 @@ func (s *UserService) GetGroupsWithContext(ctx context.Context, accountId string
 }
 
 // GetGroups wraps GetGroupsWithContext using the background context.
-func (s *UserService) GetGroups(accountId string) (*[]UserGroup, *Response, error) {
-	return s.GetGroupsWithContext(context.Background(), accountId)
+func (s *UserService) GetGroups(accountID string) (*[]UserGroup, *Response, error) {
+	return s.GetGroupsWithContext(context.Background(), accountID)
 }
 
 // GetSelfWithContext information about the current logged-in user
@@ -238,10 +238,10 @@ func WithUsername(username string) UserSearchF {
 	}
 }
 
-// WithAccountId sets the account id to search
-func WithAccountId(accountId string) UserSearchF {
+// WithaccountID sets the account id to search
+func WithaccountID(accountID string) UserSearchF {
 	return func(s UserSearchType) UserSearchType {
-		s = append(s, UserSearchParam{name: "accountId", value: accountId})
+		s = append(s, UserSearchParam{name: "accountId", value: accountID})
 		return s
 	}
 }
