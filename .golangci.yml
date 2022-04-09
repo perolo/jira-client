@@ -79,7 +79,6 @@ linters:
     - funlen
     - gochecknoinits
     - goconst
-    - gocritic
     - gocyclo
     - gofmt
     - goimports
@@ -89,7 +88,6 @@ linters:
     - gosimple
     - govet
     - ineffassign
-    - lll
     - nakedret
     - noctx
     - nolintlint
@@ -99,12 +97,14 @@ linters:
     - typecheck
     - unconvert
     - unparam
-    - unused
     - varcheck
-    - whitespace
 
   # don't enable:
   #  - misspell
+  #  - lll
+  #  - whitespace
+  #  - unused
+  #  - gocritic
 
   # - asciicheck
   # - scopelint
