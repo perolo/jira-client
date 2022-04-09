@@ -49,10 +49,12 @@ pipeline {
             }
         }
         stage('Artifacts') {
-            steps {                
-                if (fileExists('report.xml')) {
-                    archiveArtifacts artifacts: 'report.xml', fingerprint: true
-                    junit 'report.xml'
+            steps { 
+                script {
+                    if (fileExists('report.xml')) {
+                        archiveArtifacts artifacts: 'report.xml', fingerprint: true
+                        junit 'report.xml'
+                    }
                 }
             }
         }
