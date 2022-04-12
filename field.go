@@ -3,7 +3,6 @@ package jira
 import (
 	"context"
 	"fmt"
-
 	"github.com/google/go-querystring/query"
 )
 
