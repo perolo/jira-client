@@ -2,7 +2,7 @@ package jira
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/google/go-querystring/query"
 )
 
@@ -124,4 +124,34 @@ func (s *FieldService) GetAllCustomFieldsWithContext(ctx context.Context, option
 // GetAllCustomFields Get wraps GetWithContext using the background context.
 func (s *FieldService) GetAllCustomFields(options *FieldOptions) (*CustomFieldsResponseType, *Response, error) {
 	return s.GetAllCustomFieldsWithContext(context.Background(), options)
+}
+
+// GetAllCustomFields Get wraps GetWithContext using the background context.
+func (s *FieldService) DeleteCustomField(id string) (*DeleteCustomFieldsResponseType, *Response, error) {
+	return s.DeleteCustomFieldWithContext(context.Background(), id)
+}
+
+type DeleteCustomFieldsResponseType struct {
+	Message                string   `json:"message"`
+	DeletedCustomFields    []string `json:"deletedCustomFields"`
+	NotDeletedCustomFields struct {
+		Customfield10001 string `json:"customfield_10001"`
+	} `json:"notDeletedCustomFields"`
+}
+
+// DeleteCustomFieldWithContext Get wraps GetWithContext using the background context.
+func (s *FieldService) DeleteCustomFieldWithContext(ctx context.Context, id string) (*DeleteCustomFieldsResponseType, *Response, error) {
+	apiEndpoint := fmt.Sprintf("rest/api/2/customFields?ids=%s", id)
+	req, err := s.client.NewRequestWithContext(ctx, "DELETE", apiEndpoint, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	delresp := new(DeleteCustomFieldsResponseType)
+	resp, err := s.client.Do(req, delresp)
+	if err != nil {
+		err = NewJiraError(resp, err)
+	}
+	return delresp, resp, err
+
 }
