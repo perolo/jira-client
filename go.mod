@@ -12,7 +12,5 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 )
 
-require (
-	github.com/magiconair/properties v1.8.6 // indirect
-	golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
-)
+require golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect
+
