@@ -117,10 +117,10 @@ func (s *GroupService) Get(name string) ([]GroupMember, *Response, error) {
 func (s *GroupService) GetWithOptionsWithContext(ctx context.Context, name string, options *GroupSearchOptions) ([]GroupMember, *Response, error) {
 	var apiEndpoint string
 	if options == nil {
-		apiEndpoint = fmt.Sprintf("/rest/api/2/group/member?groupname=%s", url.QueryEscape(name))
+		apiEndpoint = fmt.Sprintf("/rest/api/latest/group/member?groupname=%s", url.QueryEscape(name))
 	} else {
 		apiEndpoint = fmt.Sprintf(
-			"/rest/api/2/group/member?groupname=%s&startAt=%d&maxResults=%d&includeInactiveUsers=%t",
+			"/rest/api/latest/group/member?groupname=%s&startAt=%d&maxResults=%d&includeInactiveUsers=%t",
 			url.QueryEscape(name),
 			options.StartAt,
 			options.MaxResults,

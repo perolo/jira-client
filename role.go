@@ -128,7 +128,7 @@ func (s *RoleService) GetRolesForProjectWithContext(ctx context.Context, proj st
 
 // GetActorsForProjectRoleWithContext /rest/api/2/project/{projectIdOrKey}/role/{id}
 func (s *RoleService) GetActorsForProjectRoleWithContext(ctx context.Context, proj string, roleid string) (*Role, *Response, error) {
-	apiEndpoint := fmt.Sprintf("/rest/api/2/project/%s/role/%s", proj, roleid)
+	apiEndpoint := fmt.Sprintf("/rest/api/latest/project/%s/role/%s", proj, roleid)
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err

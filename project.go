@@ -14,20 +14,83 @@ type ProjectService struct {
 	client *Client
 }
 
+/*
+type AvatarUrls struct {
+	Four8X48  string `json:"48x48" structs:"48x48,omitempty"`
+	Two4X24   string `json:"24x24" structs:"24x24,omitempty"`
+	One6X16   string `json:"16x16" structs:"16x16,omitempty"`
+	Three2X32 string `json:"32x32" structs:"32x32,omitempty"`
+}
+*/
+
+type Properties struct {
+}
+
 type ProjectType struct {
-	Expand          string          `json:"expand" structs:"expand"`
-	Self            string          `json:"self" structs:"self"`
-	ID              string          `json:"id" structs:"id"`
-	Key             string          `json:"key" structs:"key"`
-	Name            string          `json:"name" structs:"name"`
-	AvatarUrls      AvatarUrls      `json:"avatarUrls" structs:"avatarUrls"`
-	ProjectTypeKey  string          `json:"projectTypeKey" structs:"projectTypeKey"`
-	ProjectCategory ProjectCategory `json:"projectCategory,omitempty" structs:"projectsCategory,omitempty"`
-	IssueTypes      []IssueType     `json:"issueTypes,omitempty" structs:"issueTypes,omitempty"`
+	Expand          string          `json:"expand" structs:"expand,omitempty"`
+	Self            string          `json:"self" structs:"self,omitempty"`
+	ID              string          `json:"id" structs:"id,omitempty"`
+	Key             string          `json:"key" structs:"key,omitempty"`
+	Name            string          `json:"name" structs:"name,omitempty"`
+	AvatarUrls      AvatarUrls      `json:"avatarUrls" structs:"avatarUrls,omitempty"`
+	ProjectCategory ProjectCategory `json:"projectCategory,omitempty" structs:"projectCategory,omitempty"`
+	ProjectTypeKey  string          `json:"projectTypeKey" structs:"projectTypeKey,omitempty"`
+	Simplified      bool            `json:"simplified" structs:"simplified,omitempty"`
+	Style           string          `json:"style" structs:"style,omitempty"`
+	IsPrivate       bool            `json:"isPrivate" structs:"isPrivate,omitempty"`
+	Properties      Properties      `json:"properties" structs:"properties,omitempty"`
+	EntityID        string          `json:"entityId,omitempty" structs:"entityId,omitempty"`
+	UUID            string          `json:"uuid,omitempty" structs:"uuid,omitempty"`
 }
 
 // ProjectList represent a list of Projects
-type ProjectList []ProjectType
+// type ProjectList []ProjectType
+type ProjectList struct {
+	Self       string        `json:"self" structs:"self,omitempty"`
+	MaxResults int           `json:"maxResults" structs:"maxResults,omitempty"`
+	StartAt    int           `json:"startAt" structs:"startAt,omitempty"`
+	Total      int           `json:"total" structs:"total,omitempty"`
+	IsLast     bool          `json:"isLast" structs:"isLast,omitempty"`
+	Values     []ProjectType `json:"values" structs:"values,omitempty"`
+}
+
+/*
+
+type ProjectList struct {
+	Self       string `json:"self" structs:"self,omitempty"`
+	MaxResults int    `json:"maxResults" structs:"maxResults,omitempty"`
+	StartAt    int    `json:"startAt" structs:"startAt,omitempty"`
+	Total      int    `json:"total" structs:"total,omitempty"`
+	IsLast     bool   `json:"isLast" structs:"isLast,omitempty"`
+	Values     []struct {
+		Expand     string `json:"expand" structs:"expand,omitempty"`
+		Self       string `json:"self" structs:"self,omitempty"`
+		ID         string `json:"id" structs:"id,omitempty"`
+		Key        string `json:"key" structs:"key,omitempty"`
+		Name       string `json:"name" structs:"name,omitempty"`
+		AvatarUrls struct {
+			Four8X48  string `json:"48x48" structs:"48x48,omitempty"`
+			Two4X24   string `json:"24x24" structs:"24x24,omitempty"`
+			One6X16   string `json:"16x16" structs:"16x16,omitempty"`
+			Three2X32 string `json:"32x32" structs:"32x32,omitempty"`
+		} `json:"avatarUrls" structs:"avatarUrls,omitempty"`
+		ProjectCategory struct {
+			Self        string `json:"self" structs:"self,omitempty"`
+			ID          string `json:"id" structs:"id,omitempty"`
+			Name        string `json:"name" structs:"name,omitempty"`
+			Description string `json:"description" structs:"description,omitempty"`
+		} `json:"projectCategory,omitempty" structs:"projectCategory,omitempty"`
+		ProjectTypeKey string `json:"projectTypeKey" structs:"projectTypeKey,omitempty"`
+		Simplified     bool   `json:"simplified" structs:"simplified,omitempty"`
+		Style          string `json:"style" structs:"style,omitempty"`
+		IsPrivate      bool   `json:"isPrivate" structs:"isPrivate,omitempty"`
+		Properties     struct {
+		} `json:"properties" structs:"properties,omitempty"`
+		EntityID string `json:"entityId,omitempty" structs:"entityId,omitempty"`
+		UUID     string `json:"uuid,omitempty" structs:"uuid,omitempty"`
+	} `json:"values"  structs:"values,omitempty`
+}
+*/
 
 // ProjectCategory represents a single project category
 type ProjectCategory struct {
@@ -100,7 +163,7 @@ func (s *ProjectService) GetList() (*ProjectList, *Response, error) {
 //
 // Jira API docs: https://docs.atlassian.com/jira/REST/latest/#api/2/project-getAllProjects
 func (s *ProjectService) ListWithOptionsWithContext(ctx context.Context, options *GetQueryOptions) (*ProjectList, *Response, error) {
-	apiEndpoint := "rest/api/2/project"
+	apiEndpoint := "/rest/api/3/project/search"
 	req, err := s.client.NewRequestWithContext(ctx, "GET", apiEndpoint, nil)
 	if err != nil {
 		return nil, nil, err
